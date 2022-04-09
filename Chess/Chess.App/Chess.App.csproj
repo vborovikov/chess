@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RelayTk" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Chess\BlackBishop.png" />
+    <Resource Include="Resources\Chess\BlackKing.png" />
+    <Resource Include="Resources\Chess\BlackKnight.png" />
+    <Resource Include="Resources\Chess\BlackPawn.png" />
+    <Resource Include="Resources\Chess\BlackQueen.png" />
+    <Resource Include="Resources\Chess\BlackTower.png" />
+    <Resource Include="Resources\Chess\WhiteBishop.png" />
+    <Resource Include="Resources\Chess\WhiteKing.png" />
+    <Resource Include="Resources\Chess\WhiteKnight.png" />
+    <Resource Include="Resources\Chess\WhitePawn.png" />
+    <Resource Include="Resources\Chess\WhiteQueen.png" />
+    <Resource Include="Resources\Chess\WhiteTower.png" />
+  </ItemGroup>
+
+</Project>
