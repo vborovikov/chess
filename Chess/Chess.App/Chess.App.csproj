@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Chess\Chess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Chess\BlackBishop.png" />
     <Resource Include="Resources\Chess\BlackKing.png" />
     <Resource Include="Resources\Chess\BlackKnight.png" />

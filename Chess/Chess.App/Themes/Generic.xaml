@@ -1,11 +1,115 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:Chess.App.Controls">
+                    xmlns:local="clr-namespace:Chess.App.Controls"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
+    <sys:Double x:Key="SquareSize">64</sys:Double>
     <SolidColorBrush x:Key="WhiteSquareBrush"
                      Color="AntiqueWhite" />
     <SolidColorBrush x:Key="BlackSquareBrush"
                      Color="RosyBrown" />
+
+    <Style TargetType="{x:Type local:PieceControl}">
+        <Setter Property="Width"
+                Value="{StaticResource SquareSize}" />
+        <Setter Property="Height"
+                Value="{StaticResource SquareSize}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:PieceControl}">
+                    <Image x:Name="PieceImage"
+                           Stretch="Uniform"
+                           Margin="4" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMoving"
+                                 Value="True">
+                            <Setter Property="Visibility"
+                                    Value="Hidden"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="IsMoving"
+                                 Value="False">
+                            <Setter Property="Visibility"
+                                    Value="Visible"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhitePawn">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhitePawn.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhiteKnight">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhiteKnight.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhiteBishop">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhiteBishop.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhiteRook">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhiteTower.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhiteQueen">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhiteQueen.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="WhiteKing">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/WhiteKing.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackPawn">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackPawn.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackKnight">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackKnight.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackBishop">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackBishop.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackRook">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackTower.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackQueen">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackQueen.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                        <Trigger Property="Design"
+                                 Value="BlackKing">
+                            <Setter Property="Source"
+                                    Value="Resources/Chess/BlackKing.png"
+                                    TargetName="PieceImage" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style TargetType="{x:Type local:BoardControl}">
         <Setter Property="Foreground"
@@ -25,7 +129,18 @@
         <Setter Property="VerticalAlignment"
                 Value="Top" />
         <Setter Property="SquareSize"
-                Value="64" />
+                Value="{StaticResource SquareSize}" />
+        <Setter Property="SnapsToDevicePixels"
+                Value="True" />
+        <Setter Property="AllowDrop"
+                Value="True" />
+        <Setter Property="DragTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <local:PieceControl Design="{Binding Design}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:BoardControl}">
@@ -33,18 +148,10 @@
                                      Background="{TemplateBinding Background}"
                                      BorderThickness="{TemplateBinding BorderThickness}"
                                      SquareSize="{TemplateBinding SquareSize}"
-                                     SnapsToDevicePixels="True">
-                        <Grid x:Name="ItemGrid">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                                <RowDefinition Height="{TemplateBinding SquareSize}" />
-                            </Grid.RowDefinitions>
+                                     SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                        <Grid x:Name="SquareGrid"
+                              KeyboardNavigation.DirectionalNavigation="Cycle"
+                              IsItemsHost="True">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{TemplateBinding SquareSize}" />
                                 <ColumnDefinition Width="{TemplateBinding SquareSize}" />
@@ -55,161 +162,16 @@
                                 <ColumnDefinition Width="{TemplateBinding SquareSize}" />
                                 <ColumnDefinition Width="{TemplateBinding SquareSize}" />
                             </Grid.ColumnDefinitions>
-
-                            <Image Source="Resources/Chess/BlackTower.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48" />
-                            <Image Source="Resources/Chess/BlackKnight.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="1" />
-                            <Image Source="Resources/Chess/BlackBishop.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="2" />
-                            <Image Source="Resources/Chess/BlackQueen.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="3" />
-                            <Image Source="Resources/Chess/BlackKing.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="4" />
-                            <Image Source="Resources/Chess/BlackBishop.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="5" />
-                            <Image Source="Resources/Chess/BlackKnight.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="6" />
-                            <Image Source="Resources/Chess/BlackTower.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Column="7" />
-
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="0" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="1" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="2" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="3" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="4" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="5" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="6" />
-                            <Image Source="Resources/Chess/BlackPawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="1"
-                                   Grid.Column="7" />
-
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="0" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="1" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="2" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="3" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="4" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="5" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="6" />
-                            <Image Source="Resources/Chess/WhitePawn.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="6"
-                                   Grid.Column="7" />
-                            <Image Source="Resources/Chess/WhiteTower.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="0" />
-                            <Image Source="Resources/Chess/WhiteKnight.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="1" />
-                            <Image Source="Resources/Chess/WhiteBishop.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="2" />
-                            <Image Source="Resources/Chess/WhiteQueen.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="3" />
-                            <Image Source="Resources/Chess/WhiteKing.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="4" />
-                            <Image Source="Resources/Chess/WhiteBishop.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="5" />
-                            <Image Source="Resources/Chess/WhiteKnight.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="6" />
-                            <Image Source="Resources/Chess/WhiteTower.png"
-                                   MaxWidth="48"
-                                   MaxHeight="48"
-                                   Grid.Row="7"
-                                   Grid.Column="7" />
-
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                                <RowDefinition Height="{TemplateBinding SquareSize}" />
+                            </Grid.RowDefinitions>
                         </Grid>
                     </local:Checkered>
                 </ControlTemplate>

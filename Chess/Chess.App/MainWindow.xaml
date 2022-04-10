@@ -5,7 +5,7 @@
         xmlns:c="clr-namespace:Chess.App.Controls"
         xmlns:p="clr-namespace:Chess.App.Presentation"
         Title="Chess"
-        Height="450"
+        Height="800"
         Width="800">
     <Window.Resources>
         <p:MainPresenter x:Key="Main" />
@@ -40,7 +40,10 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto">
             <c:BoardControl HorizontalAlignment="Center"
-                            VerticalAlignment="Center" />
+                            VerticalAlignment="Center">
+                <c:PieceControl Design="BlackKing"
+                                Square="h6" />
+            </c:BoardControl>
         </ScrollViewer>
     </DockPanel>
 </Window>
