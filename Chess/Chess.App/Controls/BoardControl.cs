@@ -60,6 +60,7 @@ public class BoardControl : ItemsControl
     {
         if (e.Source == this)
         {
+            //todo: we get here when we drag a piece over another piece
             this.dragAdorner?.Detach();
             this.dragAdorner = null;
             e.Handled = true;
@@ -70,14 +71,9 @@ public class BoardControl : ItemsControl
 
     private bool HandlePieceMove(DragEventArgs e, bool drop = false)
     {
-        if (e.Data.GetData(typeof(PieceControl)) is not PieceControl pieceControl)
-        {
-            e.Effects = DragDropEffects.None;
-            e.Handled = true;
-            return false;
-        }
-
-        if (this.squareGrid is not null)
+        if (e.Data.GetData(typeof(IPiece)) is IPiece gamePiece &&
+            this.ItemContainerGenerator.ContainerFromItem(gamePiece) is PieceControl pieceControl &&
+            this.squareGrid is not null)
         {
             var piecePosition = e.GetPosition(this.squareGrid);
             if (piecePosition.X < 0 || piecePosition.Y < 0 || piecePosition.X > this.squareGrid.ActualWidth || piecePosition.Y > this.squareGrid.ActualHeight)
@@ -93,7 +89,18 @@ public class BoardControl : ItemsControl
                 
                 var squareFile = (SquareFile)(piecePosition.X / this.SquareSize);
                 var squareRank = (SquareRank)((int)SquareRank.Eight - piecePosition.Y / this.SquareSize + 1);
-                pieceControl.Square = Game.GetSquare(squareFile, squareRank);
+                var square = Game.GetSquare(squareFile, squareRank);
+
+                if (this.ItemsSource is Game game && game.Move(gamePiece, square))
+                {
+                    pieceControl.Square = square;
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                    e.Handled = true;
+                    return false;
+                }
             }
             else
             {
@@ -105,8 +112,12 @@ public class BoardControl : ItemsControl
                 }
                 this.dragAdorner.UpdatePosition(piecePosition);
             }
+
+            return true;
         }
 
-        return true;
+        e.Effects = DragDropEffects.None;
+        e.Handled = true;
+        return false;
     }
 }

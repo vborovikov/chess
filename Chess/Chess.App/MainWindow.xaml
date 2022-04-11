@@ -43,9 +43,8 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto">
             <c:BoardControl HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                <c:PieceControl Design="BlackKing"
-                                Square="h6" />
+                            VerticalAlignment="Center"
+                            ItemsSource="{Binding Game}">
             </c:BoardControl>
         </ScrollViewer>
     </DockPanel>

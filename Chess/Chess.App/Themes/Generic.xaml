@@ -134,7 +134,18 @@
                 Value="True" />
         <Setter Property="AllowDrop"
                 Value="True" />
-        <Setter Property="DragTemplate">
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type local:PieceControl}"
+                       BasedOn="{StaticResource {x:Type local:PieceControl}}">
+                    <Setter Property="Design"
+                            Value="{Binding Content.Design, RelativeSource={RelativeSource Self}}" />
+                    <Setter Property="Square"
+                            Value="{Binding Content.Square, RelativeSource={RelativeSource Self}}" />
+                </Style>
+            </Setter.Value>
+        </Setter>
+            <Setter Property="DragTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <local:PieceControl Design="{Binding Design}" />

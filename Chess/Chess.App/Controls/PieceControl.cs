@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-public class PieceControl : Control, IPiece
+public class PieceControl : ContentControl, IPiece
 {
     public static readonly DependencyProperty DesignProperty =
         DependencyProperty.Register(nameof(Design), typeof(PieceDesign),
@@ -65,7 +65,7 @@ public class PieceControl : Control, IPiece
             {
                 this.IsMoving = true;
                 // this will block untill the drop
-                DragDrop.DoDragDrop(this, this, DragDropEffects.Move);
+                DragDrop.DoDragDrop(this, new DataObject(typeof(IPiece), this.Content), DragDropEffects.Move);
             }
             finally
             {
