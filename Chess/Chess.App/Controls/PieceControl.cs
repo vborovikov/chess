@@ -48,7 +48,7 @@ public class PieceControl : Control, IPiece
     {
         var square = (Square)e.NewValue;
 
-        Grid.SetRow(this, 7 - (int)Game.GetRank(square));
+        Grid.SetRow(this, SquareRank.Eight - Game.GetRank(square));
         Grid.SetColumn(this, (int)Game.GetFile(square));
     }
 
