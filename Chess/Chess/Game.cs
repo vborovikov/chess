@@ -34,18 +34,26 @@ public class Game : IEnumerable<IPiece>
     {
         var pieceSquare = Find(piece);
         if (pieceSquare == Square.None || square == pieceSquare ||
-            square < Square.First || square > Square.Last ||
-            this.board[(int)square] is not null)
+            square < Square.First || square > Square.Last)
         {
             return false;
         }
 
-        this.board[(int)pieceSquare] = null!;
-        this.board[(int)square] = piece;
+        if (CanMove(piece, pieceSquare, ref square))
+        {
+            this.board[(int)pieceSquare] = null!;
+            this.board[(int)square] = piece;
 
-        this.Moved?.Invoke(this, EventArgs.Empty);
+            this.Moved?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
 
-        return true;
+        return false;
+    }
+
+    private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
+    {
+        return this.board[(int)newSquare] is null;
     }
 
     public string ToFen()
