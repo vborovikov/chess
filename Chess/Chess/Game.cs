@@ -2,9 +2,16 @@
 
 using System;
 using System.Collections;
+using System.Collections.Specialized;
 using System.Text;
 
-public class Game : IEnumerable<IPiece>
+public enum GameNotation
+{
+    ForsythEdwards,
+    Algebraic,
+}
+
+public class Game : IEnumerable<IPiece>, INotifyCollectionChanged
 {
     public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -19,7 +26,9 @@ public class Game : IEnumerable<IPiece>
 
     public PieceEnumerator Pieces => new(this);
 
-    public event EventHandler? Moved;
+    public event EventHandler? PieceTaken;
+    public event EventHandler? PieceMoved;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     public Square Find(IPiece piece)
     {
@@ -41,10 +50,21 @@ public class Game : IEnumerable<IPiece>
 
         if (CanMove(piece, pieceSquare, ref square))
         {
-            this.board[(int)pieceSquare] = null!;
-            this.board[(int)square] = piece;
+            var oldIndex = (int)pieceSquare;
+            var newIndex = (int)square;
+            var takenPiece = this.board[newIndex];
+            this.board[oldIndex] = null!;
+            this.board[newIndex] = piece;
 
-            this.Moved?.Invoke(this, EventArgs.Empty);
+            if (takenPiece is not null)
+            {
+                this.PieceTaken?.Invoke(this, EventArgs.Empty);
+                this.CollectionChanged?.Invoke(this,
+                    new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Replace, piece, takenPiece));
+            }
+            this.PieceMoved?.Invoke(this, EventArgs.Empty);
+
             return true;
         }
 
@@ -53,10 +73,11 @@ public class Game : IEnumerable<IPiece>
 
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
-        return this.board[(int)newSquare] is null;
+        var otherPiece = this.board[(int)newSquare];
+        return otherPiece is null || otherPiece.Color != piece.Color;
     }
 
-    public string ToFen()
+    public override string ToString()
     {
         var fen = new StringBuilder();
         var empty = 0;
@@ -120,13 +141,40 @@ public class Game : IEnumerable<IPiece>
     {
         var game = new Game();
 
-        var len = fenRecord.Length;
+        game.Reset(fenRecord, GameNotation.ForsythEdwards);
+
+        return game;
+    }
+
+    public void Reset(ReadOnlySpan<char> record, GameNotation notation = GameNotation.ForsythEdwards)
+    {
+        Array.Clear(this.board);
+
+        switch (notation)
+        {
+            case GameNotation.Algebraic:
+                ResetAN(record);
+                break;
+            default:
+                ResetFen(record);
+                break;
+        }
+    }
+
+    private void ResetAN(ReadOnlySpan<char> record)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ResetFen(ReadOnlySpan<char> record)
+    {
+        var len = record.Length;
         var i = 0;
         var file = SquareFile.A;
         var rank = SquareRank.Eight;
         for (; i < len; ++i)
         {
-            var c = fenRecord[i];
+            var c = record[i];
             if (c == ' ')
             {
                 break;
@@ -143,19 +191,17 @@ public class Game : IEnumerable<IPiece>
             }
             else
             {
-                var piece = game.CreatePieceFromFen(c);
+                var piece = CreatePieceFromFen(c);
                 if (piece is null)
                 {
                     //todo: invalid character
                     break;
                 }
 
-                game.board[(int)GetSquare(file, rank)] = piece;
+                this.board[(int)GetSquare(file, rank)] = piece;
                 file++;
             }
         }
-
-        return game;
     }
 
     private IPiece CreatePieceFromFen(char ch)
