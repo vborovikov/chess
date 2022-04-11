@@ -76,7 +76,10 @@ public class Game
                     {
                         fen.Append(empty);
                     }
-                    fen.Append('/');
+                    if (rank > SquareRank.One)
+                    {
+                        fen.Append('/');
+                    }
                     empty = 0;
                 }
             }
@@ -140,11 +143,6 @@ public class Game
 
                 game.board[(int)GetSquare(file, rank)] = piece;
                 file++;
-                if (file > SquareFile.H)
-                {
-                    //todo: invalid fen
-                    break;
-                }
             }
         }
 

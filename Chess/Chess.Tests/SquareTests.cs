@@ -13,6 +13,8 @@ public class SquareTests
         Assert.AreEqual(Square.a1, square);
         Assert.AreEqual(SquareFile.A, Game.GetFile(square));
         Assert.AreEqual(SquareRank.One, Game.GetRank(square));
+
+        Assert.AreEqual(0, (int)square);
     }
 
     [TestMethod]
@@ -23,6 +25,8 @@ public class SquareTests
         Assert.AreEqual(Square.h8, square);
         Assert.AreEqual(SquareFile.H, Game.GetFile(square));
         Assert.AreEqual(SquareRank.Eight, Game.GetRank(square));
+
+        Assert.AreEqual(63, (int)square);
     }
 
     [TestMethod]
@@ -33,5 +37,7 @@ public class SquareTests
         Assert.AreEqual(Square.h6, square);
         Assert.AreEqual(SquareFile.H, Game.GetFile(square));
         Assert.AreEqual(SquareRank.Six, Game.GetRank(square));
+
+        Assert.AreEqual(47, (int)square);
     }
 }
