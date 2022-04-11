@@ -224,6 +224,10 @@ public class Game : IEnumerable<IPiece>
 
     public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
 
+    public static PieceColor GetPieceColor(PieceDesign design) => (PieceColor)((int)design & 0b0001);
+
+    public static PieceType GetPieceType(PieceDesign design) => (PieceType)((int)design & 0b1110);
+
     public IEnumerator<IPiece> GetEnumerator()
     {
         foreach (var piece in this.Pieces)

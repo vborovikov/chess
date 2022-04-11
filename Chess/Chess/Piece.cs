@@ -40,6 +40,8 @@
     {
         Square Square { get; }
         PieceDesign Design { get; }
+        PieceColor Color => Game.GetPieceColor(this.Design);
+        PieceType Type => Game.GetPieceType(this.Design);
     }
 
     public sealed class Piece : IPiece
