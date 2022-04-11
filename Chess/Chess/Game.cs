@@ -1,9 +1,10 @@
 ﻿namespace Chess;
 
 using System;
+using System.Collections;
 using System.Text;
 
-public class Game
+public class Game : IEnumerable<IPiece>
 {
     public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -223,6 +224,16 @@ public class Game
 
     public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
 
+    public IEnumerator<IPiece> GetEnumerator()
+    {
+        foreach (var piece in this.Pieces)
+        {
+            yield return piece;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     public struct PieceEnumerator
     {
         private readonly Game game;
@@ -249,11 +260,9 @@ public class Game
         {
             for (++this.index; this.index < this.game.board.Length; ++this.index)
             {
-                if (this.game.board[this.index] is not null)
-                {
-                    this.Current = this.game.board[this.index];
+                this.Current = this.game.board[this.index];
+                if (this.Current is not null)
                     return true;
-                }
             }
 
             return false;

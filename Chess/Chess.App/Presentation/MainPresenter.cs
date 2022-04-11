@@ -1,5 +1,6 @@
 ﻿namespace Chess.App.Presentation;
 
+using System;
 using Relay.PresentationModel;
 
 public class MainPresenter : Presenter
@@ -16,7 +17,12 @@ public class MainPresenter : Presenter
         get => this.game?.ToFen();
         set
         {
-            if (Set(ref this.game, Game.FromFen(value)))
+            if (this.game is not null)
+                this.game.Moved -= HandleGameMoved;
+            var gameChanged = Set(ref this.game, Game.FromFen(value));
+            if (this.game is not null)
+                this.game.Moved += HandleGameMoved;
+            if (gameChanged)
             {
                 RaisePropertyChanged(nameof(this.Game));
             }
@@ -24,4 +30,9 @@ public class MainPresenter : Presenter
     }
 
     public Game? Game => this.game;
+
+    private void HandleGameMoved(object? sender, EventArgs e)
+    {
+        RaisePropertyChanged(nameof(this.Fen));
+    }
 }
