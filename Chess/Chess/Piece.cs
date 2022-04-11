@@ -40,8 +40,8 @@
     {
         Square Square { get; }
         PieceDesign Design { get; }
-        PieceColor Color => Game.GetPieceColor(this.Design);
-        PieceType Type => Game.GetPieceType(this.Design);
+        PieceColor Color => Piece.GetColor(this.Design);
+        PieceType Type => Piece.GetType(this.Design);
     }
 
     public sealed class Piece : IPiece
@@ -62,5 +62,15 @@
         {
             return new Piece(game, design);
         }
+
+        public static SquareFile GetFile(Square square) => (SquareFile)((int)square % 8);
+
+        public static SquareRank GetRank(Square square) => (SquareRank)((int)square / 8);
+
+        public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
+
+        public static PieceColor GetColor(PieceDesign design) => (PieceColor)((int)design & 0b0001);
+
+        public static PieceType GetType(PieceDesign design) => (PieceType)((int)design & 0b1110);
     }
 }

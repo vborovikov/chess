@@ -58,8 +58,8 @@ public class PieceControl : ContentControl, IPiece
         }
         else
         {
-            Grid.SetRow(this, SquareRank.Eight - Game.GetRank(square));
-            Grid.SetColumn(this, (int)Game.GetFile(square));
+            Grid.SetRow(this, SquareRank.Eight - Piece.GetRank(square));
+            Grid.SetColumn(this, (int)Piece.GetFile(square));
         }
     }
 

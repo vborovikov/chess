@@ -75,7 +75,7 @@ public class BoardControl : ItemsControl
 
                 var squareFile = (SquareFile)(piecePosition.X / this.SquareSize);
                 var squareRank = (SquareRank)((int)SquareRank.Eight - piecePosition.Y / this.SquareSize + 1);
-                var square = Game.GetSquare(squareFile, squareRank);
+                var square = Piece.GetSquare(squareFile, squareRank);
 
                 var game = FindGame();
                 if (game is not null && game.Move(gamePiece, square))

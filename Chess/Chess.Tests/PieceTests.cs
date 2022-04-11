@@ -7,35 +7,35 @@ public class PieceTests
     [TestMethod]
     public void GetPieceType_FromDesigns_All()
     {
-        Assert.AreEqual(PieceType.Pawn, Game.GetPieceType(PieceDesign.WhitePawn));
-        Assert.AreEqual(PieceType.Pawn, Game.GetPieceType(PieceDesign.BlackPawn));
-        Assert.AreEqual(PieceType.Knight, Game.GetPieceType(PieceDesign.WhiteKnight));
-        Assert.AreEqual(PieceType.Knight, Game.GetPieceType(PieceDesign.BlackKnight));
-        Assert.AreEqual(PieceType.Bishop, Game.GetPieceType(PieceDesign.WhiteBishop));
-        Assert.AreEqual(PieceType.Bishop, Game.GetPieceType(PieceDesign.BlackBishop));
-        Assert.AreEqual(PieceType.Rook, Game.GetPieceType(PieceDesign.WhiteRook));
-        Assert.AreEqual(PieceType.Rook, Game.GetPieceType(PieceDesign.BlackRook));
-        Assert.AreEqual(PieceType.Queen, Game.GetPieceType(PieceDesign.WhiteQueen));
-        Assert.AreEqual(PieceType.Queen, Game.GetPieceType(PieceDesign.BlackQueen));
-        Assert.AreEqual(PieceType.King, Game.GetPieceType(PieceDesign.WhiteKing));
-        Assert.AreEqual(PieceType.King, Game.GetPieceType(PieceDesign.BlackKing));
+        Assert.AreEqual(PieceType.Pawn, Piece.GetType(PieceDesign.WhitePawn));
+        Assert.AreEqual(PieceType.Pawn, Piece.GetType(PieceDesign.BlackPawn));
+        Assert.AreEqual(PieceType.Knight, Piece.GetType(PieceDesign.WhiteKnight));
+        Assert.AreEqual(PieceType.Knight, Piece.GetType(PieceDesign.BlackKnight));
+        Assert.AreEqual(PieceType.Bishop, Piece.GetType(PieceDesign.WhiteBishop));
+        Assert.AreEqual(PieceType.Bishop, Piece.GetType(PieceDesign.BlackBishop));
+        Assert.AreEqual(PieceType.Rook, Piece.GetType(PieceDesign.WhiteRook));
+        Assert.AreEqual(PieceType.Rook, Piece.GetType(PieceDesign.BlackRook));
+        Assert.AreEqual(PieceType.Queen, Piece.GetType(PieceDesign.WhiteQueen));
+        Assert.AreEqual(PieceType.Queen, Piece.GetType(PieceDesign.BlackQueen));
+        Assert.AreEqual(PieceType.King, Piece.GetType(PieceDesign.WhiteKing));
+        Assert.AreEqual(PieceType.King, Piece.GetType(PieceDesign.BlackKing));
     }
 
     [TestMethod]
     public void GetPieceColor_FromDesigns_All()
     {
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhitePawn));
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhiteKnight));
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhiteBishop));
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhiteRook));
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhiteQueen));
-        Assert.AreEqual(PieceColor.White, Game.GetPieceColor(PieceDesign.WhiteKing));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhitePawn));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhiteKnight));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhiteBishop));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhiteRook));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhiteQueen));
+        Assert.AreEqual(PieceColor.White, Piece.GetColor(PieceDesign.WhiteKing));
 
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackPawn));
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackKnight));
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackBishop));
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackRook));
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackQueen));
-        Assert.AreEqual(PieceColor.Black, Game.GetPieceColor(PieceDesign.BlackKing));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackPawn));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackKnight));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackBishop));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackRook));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackQueen));
+        Assert.AreEqual(PieceColor.Black, Piece.GetColor(PieceDesign.BlackKing));
     }
 }

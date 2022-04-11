@@ -100,7 +100,7 @@ public class Game : IGame, IEnumerable<IPiece>
         {
             for (var file = SquareFile.A; file <= SquareFile.H; ++file)
             {
-                var square = GetSquare(file, rank);
+                var square = Piece.GetSquare(file, rank);
                 var piece = this.board[(int)square];
                 if (piece is null)
                 {
@@ -215,7 +215,7 @@ public class Game : IGame, IEnumerable<IPiece>
                     break;
                 }
 
-                this.board[(int)GetSquare(file, rank)] = piece;
+                this.board[(int)Piece.GetSquare(file, rank)] = piece;
                 file++;
             }
         }
@@ -288,16 +288,6 @@ public class Game : IGame, IEnumerable<IPiece>
 
         return pieces.ToArray();
     }
-
-    public static SquareFile GetFile(Square square) => (SquareFile)((int)square % 8);
-
-    public static SquareRank GetRank(Square square) => (SquareRank)((int)square / 8);
-
-    public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
-
-    public static PieceColor GetPieceColor(PieceDesign design) => (PieceColor)((int)design & 0b0001);
-
-    public static PieceType GetPieceType(PieceDesign design) => (PieceType)((int)design & 0b1110);
 
     public IEnumerator<IPiece> GetEnumerator()
     {
