@@ -18,16 +18,11 @@ public class BoardControl : ItemsControl
         DependencyProperty.Register(nameof(DragTemplate), typeof(DataTemplate), typeof(BoardControl), new PropertyMetadata(null));
 
     private Grid? squareGrid;
-    private DragAdorner? dragAdorner;
 
     static BoardControl()
     {
         DefaultStyleKeyProperty.OverrideMetadata(typeof(BoardControl),
             new FrameworkPropertyMetadata(typeof(BoardControl)));
-    }
-
-    public BoardControl()
-    {
     }
 
     public double SquareSize
@@ -56,17 +51,6 @@ public class BoardControl : ItemsControl
 
     protected override void OnPreviewDragOver(DragEventArgs e) => HandlePieceMove(e);
 
-    protected override void OnPreviewDragLeave(DragEventArgs e)
-    {
-        if (e.Source == this)
-        {
-            //todo: we get here when we drag a piece over another piece
-            this.dragAdorner?.Detach();
-            this.dragAdorner = null;
-            e.Handled = true;
-        }
-    }
-
     protected override void OnPreviewDrop(DragEventArgs e) => HandlePieceMove(e, drop: true);
 
     private bool HandlePieceMove(DragEventArgs e, bool drop = false)
@@ -84,9 +68,8 @@ public class BoardControl : ItemsControl
             }
             else if (drop)
             {
-                this.dragAdorner?.Detach();
-                this.dragAdorner = null;
-                
+                pieceControl.StopDragging();
+
                 var squareFile = (SquareFile)(piecePosition.X / this.SquareSize);
                 var squareRank = (SquareRank)((int)SquareRank.Eight - piecePosition.Y / this.SquareSize + 1);
                 var square = Game.GetSquare(squareFile, squareRank);
@@ -104,13 +87,7 @@ public class BoardControl : ItemsControl
             }
             else
             {
-                if (this.dragAdorner is null)
-                {
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(this.squareGrid);
-                    this.dragAdorner = new DragAdorner(this.squareGrid, adornerLayer, e.GetPosition(pieceControl),
-                        pieceControl, this.DragTemplate);
-                }
-                this.dragAdorner.UpdatePosition(piecePosition);
+                pieceControl.StartDragging(this.squareGrid, piecePosition, e.GetPosition(pieceControl), this.DragTemplate);
             }
 
             return true;

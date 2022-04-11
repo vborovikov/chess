@@ -1,7 +1,9 @@
 ﻿namespace Chess.App.Controls;
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 
 public class PieceControl : ContentControl, IPiece
@@ -19,6 +21,7 @@ public class PieceControl : ContentControl, IPiece
             typeof(PieceControl), new PropertyMetadata(false));
 
     private bool isTouched;
+    private DragAdorner? dragAdorner;
 
     static PieceControl()
     {
@@ -69,6 +72,7 @@ public class PieceControl : ContentControl, IPiece
             }
             finally
             {
+                StopDragging();
                 this.IsMoving = false;
                 this.isTouched = false;
             }
@@ -78,5 +82,21 @@ public class PieceControl : ContentControl, IPiece
     protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         this.isTouched = false;
+    }
+
+    internal void StartDragging(UIElement dropTarget, Point position, Point offset, DataTemplate dragTemplate)
+    {
+        if (this.dragAdorner is null)
+        {
+            var adornerLayer = AdornerLayer.GetAdornerLayer(dropTarget);
+            this.dragAdorner = new DragAdorner(dropTarget, adornerLayer, offset, this, dragTemplate);
+        }
+        this.dragAdorner.UpdatePosition(position);
+    }
+
+    internal void StopDragging()
+    {
+        this.dragAdorner?.Detach();
+        this.dragAdorner = null;
     }
 }
