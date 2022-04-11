@@ -1,38 +1,42 @@
 ﻿namespace Chess.App.Presentation;
 
-using System;
+using System.Collections.ObjectModel;
 using Relay.PresentationModel;
 
-public class MainPresenter : Presenter
+public class MainPresenter : Presenter, IGame
 {
-    private Game? game;
-
+    private readonly Game game;
+    
     public MainPresenter()
     {
-        this.Fen = Game.FenStartingPosition;
+        this.game = new Game();
+        this.Game = new ObservableCollection<IPiece>(this.game);
+
+        this.game.BoardReset += (sender, e) =>
+        {
+            this.Game.Clear();
+            foreach (var piece in this.game.Pieces)
+            {
+                this.Game.Add(piece);
+            }
+        };
+        this.game.PieceTaken += (sender, e) => this.Game.Remove(e.Piece);
+        this.game.PieceMoved += (sender, e) => RaisePropertyChanged(nameof(this.Fen));
+
+        this.Fen = Chess.Game.FenStartingPosition;
     }
+
+    public ObservableCollection<IPiece> Game { get; }
 
     public string? Fen
     {
-        get => this.game?.ToFen();
+        get => this.game.ToString();
         set
         {
-            if (this.game is not null)
-                this.game.Moved -= HandleGameMoved;
-            var gameChanged = Set(ref this.game, Game.FromFen(value));
-            if (this.game is not null)
-                this.game.Moved += HandleGameMoved;
-            if (gameChanged)
-            {
-                RaisePropertyChanged(nameof(this.Game));
-            }
+            this.game.Reset(value);
+            RaisePropertyChanged();
         }
     }
 
-    public Game? Game => this.game;
-
-    private void HandleGameMoved(object? sender, EventArgs e)
-    {
-        RaisePropertyChanged(nameof(this.Fen));
-    }
+    bool IGame.Move(IPiece piece, Square square) => this.game.Move(piece, square);
 }

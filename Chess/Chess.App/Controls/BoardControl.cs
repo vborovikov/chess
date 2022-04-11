@@ -1,4 +1,7 @@
 ﻿namespace Chess.App.Controls;
+
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -74,7 +77,8 @@ public class BoardControl : ItemsControl
                 var squareRank = (SquareRank)((int)SquareRank.Eight - piecePosition.Y / this.SquareSize + 1);
                 var square = Game.GetSquare(squareFile, squareRank);
 
-                if (this.ItemsSource is Game game && game.Move(gamePiece, square))
+                var game = FindGame();
+                if (game is not null && game.Move(gamePiece, square))
                 {
                     pieceControl.Square = square;
                 }
@@ -96,5 +100,13 @@ public class BoardControl : ItemsControl
         e.Effects = DragDropEffects.None;
         e.Handled = true;
         return false;
+    }
+
+    private IGame? FindGame()
+    {
+        if (this.ItemsSource is IGame game)
+            return game;
+
+        return this.DataContext as IGame;
     }
 }

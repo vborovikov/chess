@@ -51,8 +51,16 @@ public class PieceControl : ContentControl, IPiece
     {
         var square = (Square)e.NewValue;
 
-        Grid.SetRow(this, SquareRank.Eight - Game.GetRank(square));
-        Grid.SetColumn(this, (int)Game.GetFile(square));
+        if (square == Square.None)
+        {
+            ClearValue(Grid.RowProperty);
+            ClearValue(Grid.ColumnProperty);
+        }
+        else
+        {
+            Grid.SetRow(this, SquareRank.Eight - Game.GetRank(square));
+            Grid.SetColumn(this, (int)Game.GetFile(square));
+        }
     }
 
     protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -62,13 +70,13 @@ public class PieceControl : ContentControl, IPiece
 
     protected override void OnPreviewMouseMove(MouseEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed && this.isTouched)
+        if (e.LeftButton == MouseButtonState.Pressed && this.isTouched && this.Content is IPiece gamePiece)
         {
             try
             {
                 this.IsMoving = true;
                 // this will block untill the drop
-                DragDrop.DoDragDrop(this, new DataObject(typeof(IPiece), this.Content), DragDropEffects.Move);
+                DragDrop.DoDragDrop(this, new DataObject(typeof(IPiece), gamePiece), DragDropEffects.Move);
             }
             finally
             {

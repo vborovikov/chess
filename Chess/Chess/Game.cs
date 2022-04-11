@@ -11,7 +11,25 @@ public enum GameNotation
     Algebraic,
 }
 
-public class Game : IEnumerable<IPiece>, INotifyCollectionChanged
+public class GameEventArgs : EventArgs
+{
+    public GameEventArgs(IPiece piece, Square previousSquare)
+    {
+        this.Piece = piece;
+        this.PreviousSquare = previousSquare;
+    }
+
+    public IPiece Piece { get; }
+
+    public Square PreviousSquare { get; }
+}
+
+public interface IGame
+{
+    bool Move(IPiece piece, Square square);
+}
+
+public class Game : IGame, IEnumerable<IPiece>
 {
     public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -26,9 +44,9 @@ public class Game : IEnumerable<IPiece>, INotifyCollectionChanged
 
     public PieceEnumerator Pieces => new(this);
 
-    public event EventHandler? PieceTaken;
-    public event EventHandler? PieceMoved;
-    public event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public event EventHandler? BoardReset;
+    public event EventHandler<GameEventArgs>? PieceTaken;
+    public event EventHandler<GameEventArgs>? PieceMoved;
 
     public Square Find(IPiece piece)
     {
@@ -58,12 +76,9 @@ public class Game : IEnumerable<IPiece>, INotifyCollectionChanged
 
             if (takenPiece is not null)
             {
-                this.PieceTaken?.Invoke(this, EventArgs.Empty);
-                this.CollectionChanged?.Invoke(this,
-                    new NotifyCollectionChangedEventArgs(
-                        NotifyCollectionChangedAction.Replace, piece, takenPiece));
+                this.PieceTaken?.Invoke(this, new GameEventArgs(takenPiece, square));
             }
-            this.PieceMoved?.Invoke(this, EventArgs.Empty);
+            this.PieceMoved?.Invoke(this, new GameEventArgs(piece, pieceSquare));
 
             return true;
         }
@@ -159,6 +174,8 @@ public class Game : IEnumerable<IPiece>, INotifyCollectionChanged
                 ResetFen(record);
                 break;
         }
+
+        this.BoardReset?.Invoke(this, EventArgs.Empty);
     }
 
     private void ResetAN(ReadOnlySpan<char> record)
