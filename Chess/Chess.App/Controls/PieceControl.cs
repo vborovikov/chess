@@ -48,8 +48,8 @@ public class PieceControl : Control, IPiece
     {
         var square = (Square)e.NewValue;
 
-        Grid.SetRow(this, (int)Game.GetFile(square));
-        Grid.SetColumn(this, (int)Game.GetRank(square));
+        Grid.SetRow(this, 7 - (int)Game.GetRank(square));
+        Grid.SetColumn(this, (int)Game.GetFile(square));
     }
 
     protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)

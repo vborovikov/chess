@@ -90,9 +90,9 @@ public class BoardControl : ItemsControl
             {
                 this.dragAdorner?.Detach();
                 this.dragAdorner = null;
-
-                var squareFile = (SquareFile)(piecePosition.Y / this.SquareSize);
-                var squareRank = (SquareRank)(piecePosition.X / this.SquareSize);
+                
+                var squareFile = (SquareFile)(piecePosition.X / this.SquareSize);
+                var squareRank = (SquareRank)((int)SquareRank.Eight - piecePosition.Y / this.SquareSize + 1);
                 pieceControl.Square = Game.GetSquare(squareFile, squareRank);
             }
             else

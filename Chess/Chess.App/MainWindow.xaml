@@ -24,13 +24,16 @@
                     <Grid IsItemsHost="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
             <StatusBarItem Content="{Binding Status}" />
-            <StatusBarItem Grid.Column="1">
+            <StatusBarItem Content="{Binding Fen}"
+                           Grid.Column="1" />
+            <StatusBarItem Grid.Column="2">
                 <ProgressBar IsIndeterminate="True"
                              ai:Visibility.VisibleIf="{Binding IsBusy}"
                              ai:Visibility.InvisibleAs="Hidden"

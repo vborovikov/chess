@@ -41,4 +41,24 @@
         Square Square { get; }
         PieceDesign Design { get; }
     }
+
+    public sealed class Piece : IPiece
+    {
+        private readonly Game game;
+
+        private Piece(Game game, PieceDesign design)
+        {
+            this.game = game;
+            this.Design = design;
+        }
+
+        public Square Square => this.game.Find(this);
+        
+        public PieceDesign Design { get; }
+
+        public static Piece Create(Game game, PieceDesign design)
+        {
+            return new Piece(game, design);
+        }
+    }
 }
