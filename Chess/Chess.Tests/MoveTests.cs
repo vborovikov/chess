@@ -11,4 +11,11 @@ public class MoveTests
         Assert.IsFalse(Movement.CanMove(PieceDesign.WhiteRook, Square.c3, Square.d5));
         Assert.IsFalse(Movement.CanMove(PieceDesign.BlackRook, Square.c3, Square.d5));
     }
+
+    [TestMethod]
+    public void CanMove_KnightA2C1_True()
+    {
+        Assert.IsTrue(Movement.CanMove(PieceDesign.WhiteKnight, Square.a2, Square.c1));
+        Assert.IsTrue(Movement.CanMove(PieceDesign.BlackKnight, Square.a2, Square.c1));
+    }
 }

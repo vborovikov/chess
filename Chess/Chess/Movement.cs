@@ -16,7 +16,7 @@ enum PieceMoveDirection
 
 static class Movement
 {
-    private static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, 9, -7, -9 };
+    private static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, 9, -9, -7 };
     private static readonly ulong[][] moves;
 
     static Movement()
