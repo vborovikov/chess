@@ -23,20 +23,20 @@
                 <ItemsPanelTemplate>
                     <Grid IsItemsHost="True">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
-            <StatusBarItem Content="{Binding Status}" />
-            <StatusBarItem Content="{Binding Fen}"
+            <StatusBarItem Content="{Binding Fen}" />
+            <StatusBarItem Content="{Binding Status}"
                            Grid.Column="1" />
             <StatusBarItem Grid.Column="2">
                 <ProgressBar IsIndeterminate="True"
                              ai:Visibility.VisibleIf="{Binding IsBusy}"
-                             ai:Visibility.InvisibleAs="Hidden"
+                             ai:Visibility.InvisibleAs="Collapsed"
                              Margin="0" />
             </StatusBarItem>
         </StatusBar>

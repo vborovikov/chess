@@ -11,6 +11,16 @@ public enum GameNotation
     Algebraic,
 }
 
+[Flags]
+public enum Castling
+{
+    None            = 0,
+    WhiteKingSide   = 1 << 0,
+    WhiteQueenSide  = 1 << 1,
+    BlackKingSide   = 1 << 2,
+    BlackQueenSide  = 1 << 3,
+}
+
 public class GameEventArgs : EventArgs
 {
     public GameEventArgs(IPiece piece, Square previousSquare)
@@ -42,6 +52,8 @@ public class Game : IGame, IEnumerable<IPiece>
         this.pieces = CreatePieces(this);
     }
 
+    public PieceColor Color { get; private set; }
+    public Castling Castling { get; private set; }
     public PieceEnumerator Pieces => new(this);
 
     public event EventHandler? BoardReset;
@@ -74,6 +86,7 @@ public class Game : IGame, IEnumerable<IPiece>
             this.board[oldIndex] = null!;
             this.board[newIndex] = piece;
 
+            this.Color = this.Color == PieceColor.White ? PieceColor.Black : PieceColor.White;
             if (takenPiece is not null)
             {
                 this.PieceTaken?.Invoke(this, new GameEventArgs(takenPiece, square));
@@ -88,7 +101,7 @@ public class Game : IGame, IEnumerable<IPiece>
 
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
-        if (Movement.CanMove(piece.Design, oldSquare, newSquare))
+        if (this.Color == piece.Color && Movement.CanMove(piece.Design, oldSquare, newSquare))
         {
             // check if path is clear
             Write("Move path: ");
@@ -122,6 +135,8 @@ public class Game : IGame, IEnumerable<IPiece>
     public override string ToString()
     {
         var fen = new StringBuilder();
+
+        // position
         var empty = 0;
         for (var rank = SquareRank.Eight; rank >= SquareRank.One; --rank)
         {
@@ -156,6 +171,36 @@ public class Game : IGame, IEnumerable<IPiece>
                 }
             }
         }
+
+        // active color
+        fen.Append($" {(this.Color == PieceColor.White ? "w" : "b")}");
+
+        // castling
+        fen.Append(' ');
+        if (this.Castling == Castling.None)
+        {
+            fen.Append('-');
+        }
+        else
+        {
+            if (this.Castling.HasFlag(Castling.WhiteKingSide))
+            {
+                fen.Append('K');
+            }
+            if (this.Castling.HasFlag(Castling.WhiteQueenSide))
+            {
+                fen.Append('Q');
+            }
+            if (this.Castling.HasFlag(Castling.BlackKingSide))
+            {
+                fen.Append('k');
+            }
+            if (this.Castling.HasFlag(Castling.BlackQueenSide))
+            {
+                fen.Append('q');
+            }
+        }
+
         return fen.ToString();
     }
 
@@ -214,6 +259,8 @@ public class Game : IGame, IEnumerable<IPiece>
     {
         var len = record.Length;
         var i = 0;
+
+        // position
         var file = SquareFile.A;
         var rank = SquareRank.Eight;
         for (; i < len; ++i)
@@ -246,6 +293,65 @@ public class Game : IGame, IEnumerable<IPiece>
                 file++;
             }
         }
+
+        // active color
+        if (i < len)
+        {
+            var c = record[++i];
+            if (c == 'b')
+            {
+                this.Color = PieceColor.Black;
+            }
+            else
+            {
+                this.Color = PieceColor.White;
+            }
+            ++i;
+        }
+
+        // castling rights
+        if (i < len)
+        {
+            var c = record[++i];
+            if (c == '-')
+            {
+                this.Castling = Castling.None;
+            }
+            else
+            {
+                this.Castling = Castling.None;
+                while (c != ' ')
+                {
+                    switch (c)
+                    {
+                        case 'K':
+                            this.Castling |= Castling.WhiteKingSide;
+                            break;
+                        case 'Q':
+                            this.Castling |= Castling.WhiteQueenSide;
+                            break;
+                        case 'k':
+                            this.Castling |= Castling.BlackKingSide;
+                            break;
+                        case 'q':
+                            this.Castling |= Castling.BlackQueenSide;
+                            break;
+                    }
+
+                    if (i < len)
+                    {
+                        c = record[i++];
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            ++i;
+        }
+
+        //todo: en passant
     }
 
     private IPiece CreatePieceFromFen(char ch)
