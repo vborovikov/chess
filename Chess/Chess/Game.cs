@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections;
-using System.Collections.Specialized;
 using System.Text;
+using static System.Diagnostics.Debug;
 
 public enum GameNotation
 {
@@ -88,10 +88,35 @@ public class Game : IGame, IEnumerable<IPiece>
 
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
-        var otherPiece = this.board[(int)newSquare];
-        return 
-            Movement.CanMove(piece.Design, oldSquare, newSquare) &&
-            (otherPiece is null || otherPiece.Color != piece.Color);
+        if (Movement.CanMove(piece.Design, oldSquare, newSquare))
+        {
+            // check if path is clear
+            Write("Move path: ");
+            foreach (var square in Movement.GetPath(piece.Design, oldSquare, newSquare))
+            {
+                Write(square);
+                if (square == newSquare)
+                {
+                    WriteLine(".");
+                    break;
+                }
+                else
+                {
+                    Write(", ");
+                }
+
+                if (this.board[(int)square] is not null)
+                {
+                    WriteLine(".");
+                    return false;
+                }
+            }
+
+            var otherPiece = this.board[(int)newSquare];
+            return (otherPiece is null || otherPiece.Color != piece.Color);
+        }
+
+        return false;
     }
 
     public override string ToString()
