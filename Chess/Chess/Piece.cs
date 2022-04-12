@@ -1,39 +1,35 @@
 ﻿namespace Chess
 {
-    using System;
-
-    [Flags]
     public enum PieceColor
     {
-        White = 0b0000,
-        Black = 0b0001,
+        White, // 0
+        Black, // 1
     }
 
-    [Flags]
     public enum PieceType
     {
-        Pawn = 0b0000,
-        Rook = 0b0010,
-        Knight = 0b0100,
-        Bishop = 0b0110,
-        Queen = 0b1000,
-        King = 0b1010,
+        Pawn,   // 0
+        Knight, // 1
+        Bishop, // 2
+        Rook,   // 3
+        Queen,  // 4
+        King,   // 5
     }
 
     public enum PieceDesign
     {
-        WhitePawn = PieceColor.White | PieceType.Pawn,
-        WhiteRook = PieceColor.White | PieceType.Rook,
-        WhiteKnight = PieceColor.White | PieceType.Knight,
-        WhiteBishop = PieceColor.White | PieceType.Bishop,
-        WhiteQueen = PieceColor.White | PieceType.Queen,
-        WhiteKing = PieceColor.White | PieceType.King,
-        BlackPawn = PieceColor.Black | PieceType.Pawn,
-        BlackRook = PieceColor.Black | PieceType.Rook,
-        BlackKnight = PieceColor.Black | PieceType.Knight,
-        BlackBishop = PieceColor.Black | PieceType.Bishop,
-        BlackQueen = PieceColor.Black | PieceType.Queen,
-        BlackKing = PieceColor.Black | PieceType.King,
+        WhitePawn,   // 0
+        BlackPawn,   // 1
+        WhiteKnight, // 2
+        BlackKnight, // 3
+        WhiteBishop, // 4
+        BlackBishop, // 5
+        WhiteRook,   // 6
+        BlackRook,   // 7
+        WhiteQueen,  // 8
+        BlackQueen,  // 9
+        WhiteKing,   // 10
+        BlackKing,   // 11
     }
 
     public interface IPiece
@@ -69,8 +65,8 @@
 
         public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
 
-        public static PieceColor GetColor(PieceDesign design) => (PieceColor)((int)design & 0b0001);
+        public static PieceColor GetColor(PieceDesign design) => (PieceColor)((int)design & 1);
 
-        public static PieceType GetType(PieceDesign design) => (PieceType)((int)design & 0b1110);
+        public static PieceType GetType(PieceDesign design) => (PieceType)((int)design / 2);
     }
 }

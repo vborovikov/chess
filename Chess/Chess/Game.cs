@@ -89,7 +89,9 @@ public class Game : IGame, IEnumerable<IPiece>
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
         var otherPiece = this.board[(int)newSquare];
-        return otherPiece is null || otherPiece.Color != piece.Color;
+        return 
+            Movement.CanMove(piece.Design, oldSquare, newSquare) &&
+            (otherPiece is null || otherPiece.Color != piece.Color);
     }
 
     public override string ToString()
