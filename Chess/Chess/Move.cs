@@ -4,14 +4,14 @@ using System.Runtime.CompilerServices;
 
 enum PieceMoveDirection
 {
-    Up,
-    Down,
-    Left,
-    Right,
-    UpLeft,
-    UpRight,
-    DownLeft,
-    DownRight
+    Up,         //  8
+    Down,       // -8
+    Left,       // -1
+    Right,      //  1
+    UpLeft,     //  7
+    UpRight,    //  9
+    DownLeft,   // -9
+    DownRight   // -7
 }
 
 public readonly struct Move : IEquatable<Move>
@@ -117,17 +117,17 @@ static class Movement
             var to = square + offset;
             TrySetMove(ref moves, to);
         }
-        
+
         return moves;
     }
 
     private static ulong GetQueenMoves(Square square) =>
         GetSlidingMoves(square, PieceMoveDirection.Up, PieceMoveDirection.DownRight);
 
-    private static ulong GetRookMoves(Square square) => 
+    private static ulong GetRookMoves(Square square) =>
         GetSlidingMoves(square, PieceMoveDirection.Up, PieceMoveDirection.Right);
 
-    private static ulong GetBishopMoves(Square square) => 
+    private static ulong GetBishopMoves(Square square) =>
         GetSlidingMoves(square, PieceMoveDirection.UpLeft, PieceMoveDirection.DownRight);
 
     private static ulong GetKnightMoves(Square square)
@@ -202,20 +202,41 @@ static class Movement
 
         for (var direction = first; direction <= last; ++direction)
         {
+            if (!CanMove(square, direction))
+                continue;
+            
             var offset = directionOffsets[(int)direction];
             var to = square + offset;
             while (TrySetMove(ref moves, to))
             {
-                to += offset;
-                
-                if (direction == PieceMoveDirection.Left && Piece.GetFile(to) == SquareFile.H)
+                if (CanMove(to, direction))
+                {
+                    to += offset;
+                }
+                else
+                {
                     break;
-                if (direction == PieceMoveDirection.Right && Piece.GetFile(to) == SquareFile.A)
-                    break;
+                }
             }
         }
 
         return moves;
+    }
+
+    private static bool CanMove(Square from, PieceMoveDirection direction)
+    {
+        return direction switch
+        {
+            PieceMoveDirection.Up when Piece.GetRank(from) >= SquareRank.Eight => false,
+            PieceMoveDirection.Down when Piece.GetRank(from) <= SquareRank.One => false,
+            PieceMoveDirection.Left when Piece.GetFile(from) == SquareFile.H => false,
+            PieceMoveDirection.Right when Piece.GetFile(from) == SquareFile.A => false,
+            PieceMoveDirection.UpLeft when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.A => false,
+            PieceMoveDirection.UpRight when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.H => false,
+            PieceMoveDirection.DownLeft when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.A => false,
+            PieceMoveDirection.DownRight when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.H => false,
+            _ => true
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -229,13 +250,34 @@ static class Movement
         return false;
     }
 
+    [System.Diagnostics.Conditional("DEBUG")]
+    private static void PrintMoves(PieceDesign design, Square square)
+    {
+        System.Diagnostics.Debug.WriteLine($"Moves for {design} at {square}");
+
+        var moves = GetMoves(design, square);
+        Span<char> rankStr = stackalloc char[8];
+        var r = 7;
+        for (var i = 63; i >= 0; --i)
+        {
+            rankStr[r--] = (moves & (1UL << i)) == 0UL ? '·' : '#';
+            if (i % 8 == 0)
+            {
+                r = 7;
+                System.Diagnostics.Debug.WriteLine(rankStr.ToString());
+            }
+        }
+
+        System.Diagnostics.Debug.WriteLine("");
+    }
+
     public struct SquareEnumerator
     {
         private readonly ulong moves;
         private readonly Square target;
         private readonly int step;
         private Square square;
-        
+
         public SquareEnumerator(PieceDesign design, Square from, Square to)
         {
             this.moves = Movement.moves[(int)design][(int)from];
@@ -268,9 +310,9 @@ static class Movement
     public struct MoveEnumerator
     {
         private readonly Game game;
-        private readonly IPiece? piece; 
+        private readonly IPiece? piece;
         private Move move;
-        
+
         public MoveEnumerator(Game game, IPiece? piece)
         {
             this.game = game;

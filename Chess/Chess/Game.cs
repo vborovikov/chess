@@ -114,6 +114,7 @@ public class Game : IGame, IEnumerable<IPiece>
             this.Check?.Invoke(this, EventArgs.Empty);
             if (IsCheckmateFor(this.Color))
             {
+                WriteLine("Checkmate!");
                 this.Checkmate?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -155,6 +156,7 @@ public class Game : IGame, IEnumerable<IPiece>
         {
             if (piece != king && piece.Color != color && Movement.CanMove(piece.Design, Find(piece), kingSquare))
             {
+                WriteLine($"Check by {piece.Design}! {Find(piece)}-{kingSquare}");
                 return true;
             }
         }
