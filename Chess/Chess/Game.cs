@@ -192,10 +192,13 @@ public class Game : IGame, IEnumerable<IPiece>
                     Write(", ");
                 }
 
-                if (this.board[(int)square] is not null)
+                if (this.board[(int)square] is IPiece pieceInPath)
                 {
                     WriteLine(".");
-                    newSquare = square;
+                    if (pieceInPath.Color != piece.Color)
+                    {
+                        newSquare = square;
+                    }
                     break;
                 }
             }
@@ -206,6 +209,11 @@ public class Game : IGame, IEnumerable<IPiece>
 
         return false;
     }
+
+    //private bool CanMake(Move move, out Square attack)
+    //{
+        
+    //}
 
     public override string ToString()
     {

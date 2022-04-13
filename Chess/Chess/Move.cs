@@ -35,10 +35,7 @@ public readonly struct Move : IEquatable<Move>
     public Square To => (Square)((this.value >> ToShift) & SquareMask);
     public bool IsValid => CanMove(this.Design, this.From, this.To);
 
-    public SquareEnumerator GetPath()
-    {
-        return new SquareEnumerator(this);
-    }
+    public SquareEnumerator GetPath() => new(this);
 
     public override bool Equals(object? obj) => obj is Move move && Equals(move);
 
@@ -145,13 +142,13 @@ static class Movement
             PieceDesign.WhiteRook or PieceDesign.BlackRook => GetRookMoves(square),
             PieceDesign.WhiteQueen or PieceDesign.BlackQueen => GetQueenMoves(square),
             PieceDesign.WhiteKing or PieceDesign.BlackKing => GetKingMoves(square),
-            _ => 0UL,
+            _ => EmptyMap,
         };
     }
 
     private static ulong GetKingMoves(Square square)
     {
-        var moves = 0UL;
+        var moves = EmptyMap;
 
         for (var d = PieceMoveDirection.Up; d <= PieceMoveDirection.DownRight; ++d)
         {
@@ -174,7 +171,7 @@ static class Movement
 
     private static ulong GetKnightMoves(Square square)
     {
-        var moves = 0UL;
+        var moves = EmptyMap;
 
         TrySetMove(ref moves, square +
             directionOffsets[(int)PieceMoveDirection.UpLeft] +
@@ -209,7 +206,7 @@ static class Movement
 
     private static ulong GetPawnMoves(PieceColor color, Square square)
     {
-        var moves = 0UL;
+        var moves = EmptyMap;
 
         var offset = color == PieceColor.White ?
             directionOffsets[(int)PieceMoveDirection.Up] : directionOffsets[(int)PieceMoveDirection.Down];
@@ -240,7 +237,7 @@ static class Movement
     private static ulong GetSlidingMoves(Square square,
         PieceMoveDirection first, PieceMoveDirection last)
     {
-        var moves = 0UL;
+        var moves = EmptyMap;
 
         for (var direction = first; direction <= last; ++direction)
         {
