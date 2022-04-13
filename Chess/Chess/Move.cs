@@ -1,6 +1,7 @@
 ﻿namespace Chess;
 
 using System.Runtime.CompilerServices;
+using static Chess.Movement;
 
 enum PieceMoveDirection
 {
@@ -16,25 +17,89 @@ enum PieceMoveDirection
 
 public readonly struct Move : IEquatable<Move>
 {
-    private readonly ushort value;
+    private const int SquareMask = 0b111111;
+    private const int DesignMask = 0b1111;
+    private const int DesignShift = 12;
+    private const int FromShift = 0;
+    private const int ToShift = 6;
 
-    public Move(Square from, Square to)
+    private readonly int value;
+
+    public Move(PieceDesign design, Square from, Square to)
     {
-        value = (ushort)((int)from | ((int)to << 6));
+        value = ((int)from << FromShift) | ((int)to << ToShift) | ((int)design << DesignShift);
     }
 
-    public Square From => (Square)(value & 0b111111);
-    public Square To => (Square)((value >> 6) & 0b111111);
+    public PieceDesign Design => (PieceDesign)((value >> DesignShift) & DesignMask);
+    public Square From => (Square)((value >> FromShift) & SquareMask);
+    public Square To => (Square)((value >> ToShift) & SquareMask);
+    public bool IsValid => CanMove(this.Design, this.From, this.To);
+
+    public SquareEnumerator GetPath()
+    {
+        return new SquareEnumerator(this);
+    }
 
     public override bool Equals(object? obj) => obj is Move move && Equals(move);
 
     public bool Equals(Move other) => this.value == other.value;
 
-    public override int GetHashCode() => HashCode.Combine(this.value);
+    public override int GetHashCode() => this.value;
 
     public static bool operator ==(Move left, Move right) => left.Equals(right);
 
     public static bool operator !=(Move left, Move right) => !(left == right);
+
+    public struct SquareEnumerator
+    {
+        private readonly ulong moves;
+        private readonly Square target;
+        private readonly int step;
+        private Square square;
+
+        public SquareEnumerator(Move move)
+        {
+            this.moves = GetMap(move.Design, move.From);
+            this.target = move.To;
+            this.step = GetDirectionOffset(move.From, move.To);
+            this.square = Piece.GetType(move.Design) == PieceType.Knight ? move.To - step : move.From;
+        }
+
+        public bool MoveNext()
+        {
+            if (this.square == this.target)
+                return false;
+
+            this.square += this.step;
+            while ((this.moves & (1UL << (int)this.square)) == 0UL)
+            {
+                this.square += this.step;
+                if (this.square == this.target)
+                    break;
+            }
+
+            return true;
+        }
+
+        public Square Current => this.square;
+
+        public SquareEnumerator GetEnumerator() => this;
+
+        private static int GetDirectionOffset(Square from, Square to)
+        {
+            var orientation = from < to ? 1 : -1;
+            var distance = from - to;
+
+            if (distance % 9 == 0)
+                return orientation * 9;
+            if (distance % 8 == 0)
+                return orientation * 8;
+            if (distance % 7 == 0)
+                return orientation * 7;
+
+            return orientation;
+        }
+    }
 }
 
 static class Movement
@@ -58,39 +123,14 @@ static class Movement
         }
     }
 
+    public static ulong GetMap(PieceDesign design, Square square)
+    {
+        return moves[(int)design][(int)square];
+    }
+
     public static bool CanMove(PieceDesign design, Square from, Square to)
     {
         return (moves[(int)design][(int)from] & (1UL << (int)to)) != 0UL;
-    }
-
-    public static SquareEnumerator GetPath(PieceDesign design, Square from, Square to)
-    {
-        return new SquareEnumerator(design, from, to);
-    }
-
-    public static SquareEnumerator GetPath(IPiece piece, Move move)
-    {
-        return new SquareEnumerator(piece.Design, move.From, move.To);
-    }
-
-    public static MoveEnumerator GetNextMoves(Game game, IPiece? piece = null)
-    {
-        return new MoveEnumerator(game, piece);
-    }
-
-    private static int GetDirectionOffset(Square from, Square to)
-    {
-        var orientation = from < to ? 1 : -1;
-        var distance = from - to;
-
-        if (distance % 9 == 0)
-            return orientation * 9;
-        if (distance % 8 == 0)
-            return orientation * 8;
-        if (distance % 7 == 0)
-            return orientation * 7;
-
-        return orientation;
     }
 
     private static ulong GetMoves(PieceDesign design, Square square)
@@ -202,14 +242,14 @@ static class Movement
 
         for (var direction = first; direction <= last; ++direction)
         {
-            if (!CanMove(square, direction))
+            if (!CanOffset(square, direction))
                 continue;
             
             var offset = directionOffsets[(int)direction];
             var to = square + offset;
             while (TrySetMove(ref moves, to))
             {
-                if (CanMove(to, direction))
+                if (CanOffset(to, direction))
                 {
                     to += offset;
                 }
@@ -223,7 +263,7 @@ static class Movement
         return moves;
     }
 
-    private static bool CanMove(Square from, PieceMoveDirection direction)
+    private static bool CanOffset(Square from, PieceMoveDirection direction)
     {
         return direction switch
         {
@@ -269,64 +309,5 @@ static class Movement
         }
 
         System.Diagnostics.Debug.WriteLine("");
-    }
-
-    public struct SquareEnumerator
-    {
-        private readonly ulong moves;
-        private readonly Square target;
-        private readonly int step;
-        private Square square;
-
-        public SquareEnumerator(PieceDesign design, Square from, Square to)
-        {
-            this.moves = Movement.moves[(int)design][(int)from];
-            this.target = to;
-            this.step = GetDirectionOffset(from, to);
-            this.square = Piece.GetType(design) == PieceType.Knight ? to - step : from;
-        }
-
-        public bool MoveNext()
-        {
-            if (this.square == this.target)
-                return false;
-
-            this.square += this.step;
-            while ((this.moves & (1UL << (int)this.square)) == 0UL)
-            {
-                this.square += this.step;
-                if (this.square == this.target)
-                    break;
-            }
-
-            return true;
-        }
-
-        public Square Current => this.square;
-
-        public SquareEnumerator GetEnumerator() => this;
-    }
-
-    public struct MoveEnumerator
-    {
-        private readonly Game game;
-        private readonly IPiece? piece;
-        private Move move;
-
-        public MoveEnumerator(Game game, IPiece? piece)
-        {
-            this.game = game;
-            this.piece = piece;
-            this.move = default;
-        }
-
-        public Move Current => this.move;
-
-        public MoveEnumerator GetEnumerator() => this;
-
-        public bool MoveNext()
-        {
-            return false;
-        }
     }
 }

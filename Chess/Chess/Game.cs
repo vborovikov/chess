@@ -132,9 +132,9 @@ public class Game : IGame, IEnumerable<IPiece>
                 continue;
             }
 
-            foreach (var move in Movement.GetNextMoves(this, piece))
+            foreach (var move in GetNextMoves(piece))
             {
-                foreach (var square in Movement.GetPath(piece, move))
+                foreach (var square in move.GetPath())
                 {
                     if (square == kingSquare)
                     {
@@ -164,13 +164,22 @@ public class Game : IGame, IEnumerable<IPiece>
         return false;
     }
 
+    public MoveEnumerator GetNextMoves(IPiece? piece = null)
+    {
+        return new MoveEnumerator(this, piece);
+    }
+
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
-        if (this.Color == piece.Color && Movement.CanMove(piece.Design, oldSquare, newSquare))
+        if (this.Color != piece.Color)
+            return false;
+
+        var move = new Move(piece.Design, oldSquare, newSquare);
+        if (move.IsValid)
         {
             // check if path is clear
             Write("Move path: ");
-            foreach (var square in Movement.GetPath(piece.Design, oldSquare, newSquare))
+            foreach (var square in move.GetPath())
             {
                 Write(square);
                 if (square == newSquare)
@@ -186,7 +195,8 @@ public class Game : IGame, IEnumerable<IPiece>
                 if (this.board[(int)square] is not null)
                 {
                     WriteLine(".");
-                    return false;
+                    newSquare = square;
+                    break;
                 }
             }
 
@@ -521,6 +531,29 @@ public class Game : IGame, IEnumerable<IPiece>
                     return true;
             }
 
+            return false;
+        }
+    }
+
+    public struct MoveEnumerator
+    {
+        private readonly Game game;
+        private readonly IPiece? piece;
+        private Move move;
+
+        public MoveEnumerator(Game game, IPiece? piece)
+        {
+            this.game = game;
+            this.piece = piece;
+            this.move = default;
+        }
+
+        public Move Current => this.move;
+
+        public MoveEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
             return false;
         }
     }
