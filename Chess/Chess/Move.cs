@@ -27,12 +27,12 @@ public readonly struct Move : IEquatable<Move>
 
     public Move(PieceDesign design, Square from, Square to)
     {
-        value = ((int)from << FromShift) | ((int)to << ToShift) | ((int)design << DesignShift);
+        this.value = ((int)from << FromShift) | ((int)to << ToShift) | ((int)design << DesignShift);
     }
 
-    public PieceDesign Design => (PieceDesign)((value >> DesignShift) & DesignMask);
-    public Square From => (Square)((value >> FromShift) & SquareMask);
-    public Square To => (Square)((value >> ToShift) & SquareMask);
+    public PieceDesign Design => (PieceDesign)((this.value >> DesignShift) & DesignMask);
+    public Square From => (Square)((this.value >> FromShift) & SquareMask);
+    public Square To => (Square)((this.value >> ToShift) & SquareMask);
     public bool IsValid => CanMove(this.Design, this.From, this.To);
 
     public SquareEnumerator GetPath()
@@ -59,15 +59,15 @@ public readonly struct Move : IEquatable<Move>
 
         public SquareEnumerator(Move move)
         {
-            this.moves = GetMap(move.Design, move.From);
+            this.moves = move.IsValid ? GetMap(move.Design, move.From) : EmptyMap;
             this.target = move.To;
             this.step = GetDirectionOffset(move.From, move.To);
-            this.square = Piece.GetType(move.Design) == PieceType.Knight ? move.To - step : move.From;
+            this.square = Piece.GetType(move.Design) == PieceType.Knight ? move.To - this.step : move.From;
         }
 
         public bool MoveNext()
         {
-            if (this.square == this.target)
+            if (this.moves == EmptyMap || this.square == this.target)
                 return false;
 
             this.square += this.step;
@@ -75,10 +75,10 @@ public readonly struct Move : IEquatable<Move>
             {
                 this.square += this.step;
                 if (this.square == this.target)
-                    break;
+                    return true;
             }
 
-            return true;
+            return this.square >= Square.First && this.square <= Square.Last;
         }
 
         public Square Current => this.square;
@@ -104,6 +104,8 @@ public readonly struct Move : IEquatable<Move>
 
 static class Movement
 {
+    public const ulong EmptyMap = 0UL;
+
     private static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, 9, -9, -7 };
     private static readonly ulong[][] moves;
 

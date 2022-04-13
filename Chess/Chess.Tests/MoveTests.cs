@@ -25,4 +25,25 @@ public class MoveTests
         Assert.IsFalse(Movement.CanMove(PieceDesign.WhiteBishop, Square.c8, Square.e1));
         Assert.IsFalse(Movement.CanMove(PieceDesign.BlackBishop, Square.c8, Square.e1));
     }
+
+    [TestMethod]
+    public void Move_BlackPawnA7H1_Invalid()
+    {
+        var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.h1);
+        Assert.IsFalse(move.IsValid);
+    }
+
+    [TestMethod]
+    public void Move_BlackPawnA7H1_PathEmpty()
+    {
+        var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.h1);
+        
+        var squareCount = 0;
+        foreach (var square in move.GetPath())
+        {
+            squareCount++;
+        }
+
+        Assert.AreEqual(0, squareCount);
+    }
 }
