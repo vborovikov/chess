@@ -56,9 +56,15 @@ public class Game : IGame, IEnumerable<IPiece>
     public Castling Castling { get; private set; }
     public PieceEnumerator Pieces => new(this);
 
+    private IPiece WhiteKing => this.pieces[0];
+    private IPiece BlackKing => this.pieces[1];
+
     public event EventHandler? BoardReset;
     public event EventHandler<GameEventArgs>? PieceTaken;
     public event EventHandler<GameEventArgs>? PieceMoved;
+    //todo: public event EventHandler<MoveEventArgs>? FullMove;
+    public event EventHandler? Check;
+    public event EventHandler? Checkmate;
 
     public Square Find(IPiece piece)
     {
@@ -93,7 +99,64 @@ public class Game : IGame, IEnumerable<IPiece>
             }
             this.PieceMoved?.Invoke(this, new GameEventArgs(piece, pieceSquare));
 
+            CheckPosition();
+
             return true;
+        }
+
+        return false;
+    }
+
+    private void CheckPosition()
+    {
+        if (IsCheckFor(this.Color))
+        {
+            this.Check?.Invoke(this, EventArgs.Empty);
+            if (IsCheckmateFor(this.Color))
+            {
+                this.Checkmate?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
+    private bool IsCheckmateFor(PieceColor color)
+    {
+        var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
+        var kingSquare = Find(king);
+
+        foreach (var piece in this.Pieces)
+        {
+            if (piece.Color != color)
+            {
+                continue;
+            }
+
+            foreach (var move in Movement.GetNextMoves(this, piece))
+            {
+                foreach (var square in Movement.GetPath(piece, move))
+                {
+                    if (square == kingSquare)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsCheckFor(PieceColor color)
+    {
+        var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
+        var kingSquare = Find(king);
+        
+        foreach (var piece in this.Pieces)
+        {
+            if (piece != king && piece.Color != color && Movement.CanMove(piece.Design, Find(piece), kingSquare))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -322,21 +385,14 @@ public class Game : IGame, IEnumerable<IPiece>
                 this.Castling = Castling.None;
                 while (c != ' ')
                 {
-                    switch (c)
+                    this.Castling |= c switch
                     {
-                        case 'K':
-                            this.Castling |= Castling.WhiteKingSide;
-                            break;
-                        case 'Q':
-                            this.Castling |= Castling.WhiteQueenSide;
-                            break;
-                        case 'k':
-                            this.Castling |= Castling.BlackKingSide;
-                            break;
-                        case 'q':
-                            this.Castling |= Castling.BlackQueenSide;
-                            break;
-                    }
+                        'K' => Castling.WhiteKingSide,
+                        'Q' => Castling.WhiteQueenSide,
+                        'k' => Castling.BlackKingSide,
+                        'q' => Castling.BlackQueenSide,
+                        _ => Castling.None,
+                    };
 
                     if (i < len)
                     {
@@ -398,11 +454,10 @@ public class Game : IGame, IEnumerable<IPiece>
     {
         var pieces = new List<IPiece>();
 
-        for (var i = 0; i != 8; ++i)
-        {
-            pieces.Add(Piece.Create(game, PieceDesign.WhitePawn));
-            pieces.Add(Piece.Create(game, PieceDesign.BlackPawn));
-        }
+        pieces.Add(Piece.Create(game, PieceDesign.WhiteKing));
+        pieces.Add(Piece.Create(game, PieceDesign.BlackKing));
+        pieces.Add(Piece.Create(game, PieceDesign.WhiteQueen));
+        pieces.Add(Piece.Create(game, PieceDesign.BlackQueen));
 
         for (var i = 0; i != 2; ++i)
         {
@@ -414,10 +469,11 @@ public class Game : IGame, IEnumerable<IPiece>
             pieces.Add(Piece.Create(game, PieceDesign.BlackBishop));
         }
 
-        pieces.Add(Piece.Create(game, PieceDesign.WhiteQueen));
-        pieces.Add(Piece.Create(game, PieceDesign.WhiteKing));
-        pieces.Add(Piece.Create(game, PieceDesign.BlackQueen));
-        pieces.Add(Piece.Create(game, PieceDesign.BlackKing));
+        for (var i = 0; i != 8; ++i)
+        {
+            pieces.Add(Piece.Create(game, PieceDesign.WhitePawn));
+            pieces.Add(Piece.Create(game, PieceDesign.BlackPawn));
+        }
 
         return pieces.ToArray();
     }

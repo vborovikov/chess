@@ -14,6 +14,29 @@ enum PieceMoveDirection
     DownRight
 }
 
+public readonly struct Move : IEquatable<Move>
+{
+    private readonly ushort value;
+
+    public Move(Square from, Square to)
+    {
+        value = (ushort)((int)from | ((int)to << 6));
+    }
+
+    public Square From => (Square)(value & 0b111111);
+    public Square To => (Square)((value >> 6) & 0b111111);
+
+    public override bool Equals(object? obj) => obj is Move move && Equals(move);
+
+    public bool Equals(Move other) => this.value == other.value;
+
+    public override int GetHashCode() => HashCode.Combine(this.value);
+
+    public static bool operator ==(Move left, Move right) => left.Equals(right);
+
+    public static bool operator !=(Move left, Move right) => !(left == right);
+}
+
 static class Movement
 {
     private static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, 9, -9, -7 };
@@ -40,9 +63,19 @@ static class Movement
         return (moves[(int)design][(int)from] & (1UL << (int)to)) != 0UL;
     }
 
-    public static MoveEnumerator GetPath(PieceDesign design, Square from, Square to)
+    public static SquareEnumerator GetPath(PieceDesign design, Square from, Square to)
     {
-        return new MoveEnumerator(design, from, to);
+        return new SquareEnumerator(design, from, to);
+    }
+
+    public static SquareEnumerator GetPath(IPiece piece, Move move)
+    {
+        return new SquareEnumerator(piece.Design, move.From, move.To);
+    }
+
+    public static MoveEnumerator GetNextMoves(Game game, IPiece? piece = null)
+    {
+        return new MoveEnumerator(game, piece);
     }
 
     private static int GetDirectionOffset(Square from, Square to)
@@ -196,14 +229,14 @@ static class Movement
         return false;
     }
 
-    public struct MoveEnumerator
+    public struct SquareEnumerator
     {
         private readonly ulong moves;
         private readonly Square target;
         private readonly int step;
         private Square square;
         
-        public MoveEnumerator(PieceDesign design, Square from, Square to)
+        public SquareEnumerator(PieceDesign design, Square from, Square to)
         {
             this.moves = Movement.moves[(int)design][(int)from];
             this.target = to;
@@ -229,6 +262,29 @@ static class Movement
 
         public Square Current => this.square;
 
+        public SquareEnumerator GetEnumerator() => this;
+    }
+
+    public struct MoveEnumerator
+    {
+        private readonly Game game;
+        private readonly IPiece? piece; 
+        private Move move;
+        
+        public MoveEnumerator(Game game, IPiece? piece)
+        {
+            this.game = game;
+            this.piece = piece;
+            this.move = default;
+        }
+
+        public Move Current => this.move;
+
         public MoveEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
+            return false;
+        }
     }
 }

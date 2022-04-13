@@ -10,6 +10,6 @@ public class FenTests
     {
         var game = Game.FromFen(Game.FenStartingPosition);
 
-        Assert.AreEqual(Game.FenStartingPosition[..Game.FenStartingPosition.IndexOf(' ')], game.ToString());
+        Assert.AreEqual(Game.FenStartingPosition[..^6], game.ToString());
     }
 }
