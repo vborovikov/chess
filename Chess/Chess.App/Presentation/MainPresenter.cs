@@ -15,7 +15,7 @@ public class MainPresenter : Presenter, IGame
         this.game.BoardReset += (sender, e) =>
         {
             this.Game.Clear();
-            foreach (var piece in this.game.Pieces)
+            foreach (var piece in this.game)
             {
                 this.Game.Add(piece);
             }

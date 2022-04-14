@@ -2,7 +2,16 @@
 
 using System;
 
-sealed class Position : ICloneable
+/// <summary>
+/// Allows initial piece arrangment.
+/// </summary>
+interface IBoard
+{
+    void Clear();
+    void Place(IPiece piece, Square square);
+}
+
+public sealed class Position : IBoard, ICloneable
 {
     private readonly Game game;
     private readonly IPiece[] board;
@@ -23,6 +32,8 @@ sealed class Position : ICloneable
         get => this.board[(int)square];
     }
 
+    public PieceEnumerator Pieces => new(this);
+
     public Square Find(IPiece piece)
     {
         if (piece is null)
@@ -32,7 +43,7 @@ sealed class Position : ICloneable
         return index > -1 ? (Square)index : Square.None;
     }
 
-    public IPiece Change(Square from, Square to)
+    internal IPiece Change(Square from, Square to)
     {
         var movedPiece = this.board[(int)from];
         var takenPiece = this.board[(int)to];
@@ -43,17 +54,49 @@ sealed class Position : ICloneable
         return takenPiece;
     }
 
-    public void Reset(IEnumerable<(Square, IPiece)> pieces)
+    public Square CanChange(Move move)
     {
-        Array.Clear(this.board);
-
-        foreach (var (square, piece) in pieces)
+        if (move.IsValid)
         {
-            this.board[(int)square] = piece;
+            var makeTo = move.To;
+            foreach (var square in move.GetPath())
+            {
+                if (square == makeTo)
+                {
+                    break;
+                }
+
+                if (this.board[(int)square] is IPiece)
+                {
+                    makeTo = square;
+                    break;
+                }
+            }
+
+            var otherPiece = this.board[(int)makeTo];
+            if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
+                return makeTo;
         }
+
+        return Square.None;
     }
 
-    public Position Clone()
+    public MoveEnumerator GetMoves(IPiece piece)
+    {
+        return new MoveEnumerator(this, piece);
+    }
+
+    void IBoard.Clear()
+    {
+        Array.Clear(this.board);
+    }
+
+    void IBoard.Place(IPiece piece, Square square)
+    {
+        this.board[(int)square] = piece;
+    }
+
+    internal Position Clone()
     {
         var boardCopy = new IPiece[this.board.Length];
         Array.Copy(this.board, boardCopy, this.board.Length);
@@ -61,4 +104,75 @@ sealed class Position : ICloneable
     }
 
     object ICloneable.Clone() => Clone();
+
+    public struct PieceEnumerator
+    {
+        private readonly Position position;
+        private int index;
+
+        public PieceEnumerator(Position position)
+        {
+            this.position = position;
+            this.index = -1;
+            this.Current = default!;
+        }
+
+        public IPiece Current { get; private set; }
+
+        public PieceEnumerator GetEnumerator() => this;
+
+        public void Reset()
+        {
+            this.index = -1;
+            this.Current = default!;
+        }
+
+        public bool MoveNext()
+        {
+            for (++this.index; this.index < this.position.board.Length; ++this.index)
+            {
+                this.Current = this.position.board[this.index];
+                if (this.Current is not null)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
+    public struct MoveEnumerator
+    {
+        private readonly Position position;
+        private readonly PieceDesign design;
+        private readonly Square from;
+        private Square to;
+        private Move move;
+
+        public MoveEnumerator(Position position, IPiece piece)
+        {
+            this.position = position;
+            this.design = piece.Design;
+            this.from = piece.Square;
+            this.to = Square.None;
+            this.move = default;
+        }
+
+        public Move Current => this.move;
+
+        public MoveEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
+            for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
+            {
+                this.move = new Move(this.design, this.from, this.to);
+                if (this.position.CanChange(this.move) == this.to)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
 }

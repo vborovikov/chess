@@ -44,18 +44,17 @@ public class Game : IGame, IEnumerable<IPiece>
 {
     public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    private readonly IPiece[] board;
+    private readonly Position position;
     private readonly IPiece[] pieces;
 
     public Game()
     {
-        this.board = new IPiece[Square.Last - Square.First + 1];
+        this.position = new(this);
         this.pieces = CreatePieces(this);
     }
 
     public PieceColor Color { get; private set; }
     public Castling Castling { get; private set; }
-    public PieceEnumerator Pieces => new(this);
 
     private IPiece WhiteKing => this.pieces[0];
     private IPiece BlackKing => this.pieces[1];
@@ -67,14 +66,7 @@ public class Game : IGame, IEnumerable<IPiece>
     public event EventHandler? Check;
     public event EventHandler? Checkmate;
 
-    public Square Find(IPiece piece)
-    {
-        if (piece is null)
-            return Square.None;
-
-        var index = Array.IndexOf(this.board, piece);
-        return index > -1 ? (Square)index : Square.None;
-    }
+    public Square Find(IPiece piece) => this.position.Find(piece);
 
     public bool Move(IPiece piece, Square square)
     {
@@ -87,11 +79,7 @@ public class Game : IGame, IEnumerable<IPiece>
 
         if (CanMove(piece, pieceSquare, ref square))
         {
-            var oldIndex = (int)pieceSquare;
-            var newIndex = (int)square;
-            var takenPiece = this.board[newIndex];
-            this.board[oldIndex] = null!;
-            this.board[newIndex] = piece;
+            var takenPiece = this.position.Change(pieceSquare, square);
 
             this.Color = this.Color == PieceColor.White ? PieceColor.Black : PieceColor.White;
             if (takenPiece is not null)
@@ -126,14 +114,14 @@ public class Game : IGame, IEnumerable<IPiece>
         var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
         var kingSquare = Find(king);
 
-        foreach (var piece in this.Pieces)
+        foreach (var piece in this.position.Pieces)
         {
             if (piece.Color != color)
             {
                 continue;
             }
 
-            foreach (var move in GetNextMoves(piece))
+            foreach (var move in this.position.GetMoves(piece))
             {
                 foreach (var square in move.GetPath())
                 {
@@ -153,7 +141,7 @@ public class Game : IGame, IEnumerable<IPiece>
         var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
         var kingSquare = Find(king);
 
-        foreach (var piece in this.Pieces)
+        foreach (var piece in this.position.Pieces)
         {
             if (piece != king && piece.Color != color && Movement.CanMove(piece.Design, Find(piece), kingSquare))
             {
@@ -165,17 +153,12 @@ public class Game : IGame, IEnumerable<IPiece>
         return false;
     }
 
-    public MoveEnumerator GetNextMoves(IPiece piece)
-    {
-        return new MoveEnumerator(this, piece);
-    }
-
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
     {
         if (this.Color != piece.Color)
             return false;
 
-        var makeTo = CanMake(new Move(piece.Design, oldSquare, newSquare));
+        var makeTo = this.position.CanChange(new Move(piece.Design, oldSquare, newSquare));
         if (makeTo != Square.None)
         {
             newSquare = makeTo;
@@ -183,42 +166,6 @@ public class Game : IGame, IEnumerable<IPiece>
         }
         
         return false;
-    }
-
-    private Square CanMake(Move move)
-    {
-        if (move.IsValid)
-        {
-            var makeTo = move.To;
-            // check if path is clear
-            Write("Move path: ");
-            foreach (var square in move.GetPath())
-            {
-                Write(square);
-                if (square == makeTo)
-                {
-                    WriteLine(".");
-                    break;
-                }
-                else
-                {
-                    Write(", ");
-                }
-
-                if (this.board[(int)square] is IPiece)
-                {
-                    WriteLine(".");
-                    makeTo = square;
-                    break;
-                }
-            }
-
-            var otherPiece = this.board[(int)makeTo];
-            if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
-                return makeTo;
-        }
-
-        return Square.None;
     }
 
     public override string ToString()
@@ -232,7 +179,7 @@ public class Game : IGame, IEnumerable<IPiece>
             for (var file = SquareFile.A; file <= SquareFile.H; ++file)
             {
                 var square = Piece.GetSquare(file, rank);
-                var piece = this.board[(int)square];
+                var piece = this.position[square];
                 if (piece is null)
                 {
                     empty++;
@@ -324,27 +271,36 @@ public class Game : IGame, IEnumerable<IPiece>
 
     public void Reset(ReadOnlySpan<char> record, GameNotation notation = GameNotation.ForsythEdwards)
     {
-        Array.Clear(this.board);
+        var board = (IBoard)this.position;
+        board.Clear();
 
         switch (notation)
         {
             case GameNotation.Algebraic:
-                ResetAN(record);
+                ResetAN(board, record);
+                break;
+            case GameNotation.Portable:
+                ResetPGN(board, record);
                 break;
             default:
-                ResetFen(record);
+                ResetFen(board, record);
                 break;
         }
 
         this.BoardReset?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ResetAN(ReadOnlySpan<char> record)
+    private void ResetPGN(IBoard board, ReadOnlySpan<char> record)
     {
         throw new NotImplementedException();
     }
 
-    private void ResetFen(ReadOnlySpan<char> record)
+    private void ResetAN(IBoard board, ReadOnlySpan<char> record)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ResetFen(IBoard board, ReadOnlySpan<char> record)
     {
         var len = record.Length;
         var i = 0;
@@ -371,14 +327,14 @@ public class Game : IGame, IEnumerable<IPiece>
             }
             else
             {
-                var piece = CreatePieceFromFen(c);
+                var piece = FindSparePieceFen(c);
                 if (piece is null)
                 {
                     //todo: invalid character
                     break;
                 }
 
-                this.board[(int)Piece.GetSquare(file, rank)] = piece;
+                board.Place(piece, Piece.GetSquare(file, rank));
                 file++;
             }
         }
@@ -436,7 +392,7 @@ public class Game : IGame, IEnumerable<IPiece>
         //todo: en passant
     }
 
-    private IPiece CreatePieceFromFen(char ch)
+    private IPiece FindSparePieceFen(char ch)
     {
         const PieceDesign noDesign = (PieceDesign)(-1);
 
@@ -506,85 +462,11 @@ public class Game : IGame, IEnumerable<IPiece>
 
     public IEnumerator<IPiece> GetEnumerator()
     {
-        foreach (var piece in this.Pieces)
+        foreach (var piece in this.position.Pieces)
         {
             yield return piece;
         }
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public struct PieceEnumerator
-    {
-        private readonly Game game;
-        private int index;
-
-        public PieceEnumerator(Game game)
-        {
-            this.game = game;
-            this.index = -1;
-            this.Current = default!;
-        }
-
-        public IPiece Current { get; private set; }
-
-        public PieceEnumerator GetEnumerator() => this;
-
-        public void Reset()
-        {
-            this.index = -1;
-            this.Current = default!;
-        }
-
-        public bool MoveNext()
-        {
-            if (this.game is null)
-                return false;
-
-            for (++this.index; this.index < this.game.board.Length; ++this.index)
-            {
-                this.Current = this.game.board[this.index];
-                if (this.Current is not null)
-                    return true;
-            }
-
-            return false;
-        }
-    }
-
-    public struct MoveEnumerator
-    {
-        private readonly Game game;
-        private readonly PieceDesign design;
-        private readonly Square from;
-        private Square to;
-        private Move move;
-
-        public MoveEnumerator(Game game, IPiece piece)
-        {
-            this.game = game;
-            this.design = piece.Design;
-            this.from = piece.Square;
-            this.to = Square.None;
-            this.move = default;
-        }
-
-        public Move Current => this.move;
-
-        public MoveEnumerator GetEnumerator() => this;
-
-        public bool MoveNext()
-        {
-            for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
-            {
-                this.move = new Move(this.design, this.from, this.to);
-                if (this.game.CanMake(this.move) == this.to)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
 }
