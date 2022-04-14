@@ -268,8 +268,8 @@ static class Movement
     {
         return direction switch
         {
-            PieceMoveDirection.Up when Piece.GetRank(from) >= SquareRank.Eight => false,
-            PieceMoveDirection.Down when Piece.GetRank(from) <= SquareRank.One => false,
+            PieceMoveDirection.Up when Piece.GetRank(from) == SquareRank.Eight => false,
+            PieceMoveDirection.Down when Piece.GetRank(from) == SquareRank.One => false,
             PieceMoveDirection.Left when Piece.GetFile(from) == SquareFile.A => false,
             PieceMoveDirection.Right when Piece.GetFile(from) == SquareFile.H => false,
             PieceMoveDirection.UpLeft when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.A => false,
