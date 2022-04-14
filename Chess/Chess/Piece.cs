@@ -40,6 +40,7 @@ public interface IPiece
     PieceDesign Design { get; }
     PieceColor Color => Piece.GetColor(this.Design);
     PieceType Type => Piece.GetType(this.Design);
+    char Char => Piece.GetChar(this.Design);
 }
 
 public sealed class Piece : IPiece
@@ -75,4 +76,22 @@ public sealed class Piece : IPiece
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PieceType GetType(PieceDesign design) => (PieceType)((int)design / 2);
+
+    public static char GetChar(PieceDesign design) =>
+        design switch
+        {
+            PieceDesign.WhitePawn => '\u2659',
+            PieceDesign.BlackPawn => '\u265F',
+            PieceDesign.WhiteKnight => '\u2658',
+            PieceDesign.BlackKnight => '\u265E',
+            PieceDesign.WhiteBishop => '\u2657',
+            PieceDesign.BlackBishop => '\u265D',
+            PieceDesign.WhiteRook => '\u2656',
+            PieceDesign.BlackRook => '\u265C',
+            PieceDesign.WhiteQueen => '\u2655',
+            PieceDesign.BlackQueen => '\u265B',
+            PieceDesign.WhiteKing => '\u2654',
+            PieceDesign.BlackKing => '\u265A',
+            _ => '?',
+        };
 }

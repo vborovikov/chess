@@ -1,7 +1,7 @@
 ﻿namespace Chess;
 
 using System.Runtime.CompilerServices;
-using static Chess.Movement;
+using static Movement;
 
 enum PieceMoveDirection
 {
@@ -270,8 +270,8 @@ static class Movement
         {
             PieceMoveDirection.Up when Piece.GetRank(from) >= SquareRank.Eight => false,
             PieceMoveDirection.Down when Piece.GetRank(from) <= SquareRank.One => false,
-            PieceMoveDirection.Left when Piece.GetFile(from) == SquareFile.H => false,
-            PieceMoveDirection.Right when Piece.GetFile(from) == SquareFile.A => false,
+            PieceMoveDirection.Left when Piece.GetFile(from) == SquareFile.A => false,
+            PieceMoveDirection.Right when Piece.GetFile(from) == SquareFile.H => false,
             PieceMoveDirection.UpLeft when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.A => false,
             PieceMoveDirection.UpRight when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.H => false,
             PieceMoveDirection.DownLeft when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.A => false,
@@ -296,16 +296,17 @@ static class Movement
     {
         System.Diagnostics.Debug.WriteLine($"Moves for {design} at {square}");
 
+        var pieceChar = Piece.GetChar(design);
         var moves = GetMoves(design, square);
-        Span<char> rankStr = stackalloc char[8];
-        var r = 7;
+        Span<char> fileStr = stackalloc char[8];
+        var f = 7;
         for (var i = 63; i >= 0; --i)
         {
-            rankStr[r--] = (moves & (1UL << i)) == 0UL ? '·' : '#';
+            fileStr[f--] = (moves & (1UL << i)) != 0UL || (i == (int)square) ? pieceChar : '\u2610';
             if (i % 8 == 0)
             {
-                r = 7;
-                System.Diagnostics.Debug.WriteLine(rankStr.ToString());
+                f = 7;
+                System.Diagnostics.Debug.WriteLine(fileStr.ToString());
             }
         }
 

@@ -34,16 +34,16 @@ public class MoveTests
     }
 
     [TestMethod]
+    public void CanMove_RookH3D3_Valid()
+    {
+        Assert.IsTrue(Movement.CanMove(PieceDesign.WhiteRook, Square.h3, Square.d3));
+        Assert.IsTrue(Movement.CanMove(PieceDesign.BlackRook, Square.h3, Square.d3));
+    }
+
+    [TestMethod]
     public void Move_BlackPawnA7H1_PathEmpty()
     {
         var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.h1);
-        
-        var squareCount = 0;
-        foreach (var square in move.GetPath())
-        {
-            squareCount++;
-        }
-
-        Assert.AreEqual(0, squareCount);
+        Assert.IsFalse(move.GetPath().MoveNext());
     }
 }
