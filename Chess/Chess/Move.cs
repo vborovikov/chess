@@ -122,11 +122,13 @@ static class Movement
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong GetMap(PieceDesign design, Square square)
     {
         return moves[(int)design][(int)square];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CanMove(PieceDesign design, Square from, Square to)
     {
         return (moves[(int)design][(int)from] & (1UL << (int)to)) != 0UL;

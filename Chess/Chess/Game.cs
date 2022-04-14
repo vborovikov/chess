@@ -7,18 +7,19 @@ using static System.Diagnostics.Debug;
 
 public enum GameNotation
 {
-    ForsythEdwards,
-    Algebraic,
+    ForsythEdwards, // Forsyth-Edwards Notation (FEN)
+    Algebraic,      // Algebraic Notation (AN)
+    Portable,       // Portable Game Notation (PGN)
 }
 
 [Flags]
 public enum Castling
 {
-    None            = 0,
-    WhiteKingSide   = 1 << 0,
-    WhiteQueenSide  = 1 << 1,
-    BlackKingSide   = 1 << 2,
-    BlackQueenSide  = 1 << 3,
+    None = 0,
+    WhiteKingSide = 1 << 0,
+    WhiteQueenSide = 1 << 1,
+    BlackKingSide = 1 << 2,
+    BlackQueenSide = 1 << 3,
 }
 
 public class GameEventArgs : EventArgs
@@ -151,7 +152,7 @@ public class Game : IGame, IEnumerable<IPiece>
     {
         var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
         var kingSquare = Find(king);
-        
+
         foreach (var piece in this.Pieces)
         {
             if (piece != king && piece.Color != color && Movement.CanMove(piece.Design, Find(piece), kingSquare))
@@ -164,7 +165,7 @@ public class Game : IGame, IEnumerable<IPiece>
         return false;
     }
 
-    public MoveEnumerator GetNextMoves(IPiece? piece = null)
+    public MoveEnumerator GetNextMoves(IPiece piece)
     {
         return new MoveEnumerator(this, piece);
     }
@@ -174,15 +175,27 @@ public class Game : IGame, IEnumerable<IPiece>
         if (this.Color != piece.Color)
             return false;
 
-        var move = new Move(piece.Design, oldSquare, newSquare);
+        var makeTo = CanMake(new Move(piece.Design, oldSquare, newSquare));
+        if (makeTo != Square.None)
+        {
+            newSquare = makeTo;
+            return true;
+        }
+        
+        return false;
+    }
+
+    private Square CanMake(Move move)
+    {
         if (move.IsValid)
         {
+            var makeTo = move.To;
             // check if path is clear
             Write("Move path: ");
             foreach (var square in move.GetPath())
             {
                 Write(square);
-                if (square == newSquare)
+                if (square == makeTo)
                 {
                     WriteLine(".");
                     break;
@@ -192,28 +205,21 @@ public class Game : IGame, IEnumerable<IPiece>
                     Write(", ");
                 }
 
-                if (this.board[(int)square] is IPiece pieceInPath)
+                if (this.board[(int)square] is IPiece)
                 {
                     WriteLine(".");
-                    if (pieceInPath.Color != piece.Color)
-                    {
-                        newSquare = square;
-                    }
+                    makeTo = square;
                     break;
                 }
             }
 
-            var otherPiece = this.board[(int)newSquare];
-            return (otherPiece is null || otherPiece.Color != piece.Color);
+            var otherPiece = this.board[(int)makeTo];
+            if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
+                return makeTo;
         }
 
-        return false;
+        return Square.None;
     }
-
-    //private bool CanMake(Move move, out Square attack)
-    //{
-        
-    //}
 
     public override string ToString()
     {
@@ -532,6 +538,9 @@ public class Game : IGame, IEnumerable<IPiece>
 
         public bool MoveNext()
         {
+            if (this.game is null)
+                return false;
+
             for (++this.index; this.index < this.game.board.Length; ++this.index)
             {
                 this.Current = this.game.board[this.index];
@@ -546,13 +555,17 @@ public class Game : IGame, IEnumerable<IPiece>
     public struct MoveEnumerator
     {
         private readonly Game game;
-        private readonly IPiece? piece;
+        private readonly PieceDesign design;
+        private readonly Square from;
+        private Square to;
         private Move move;
 
-        public MoveEnumerator(Game game, IPiece? piece)
+        public MoveEnumerator(Game game, IPiece piece)
         {
             this.game = game;
-            this.piece = piece;
+            this.design = piece.Design;
+            this.from = piece.Square;
+            this.to = Square.None;
             this.move = default;
         }
 
@@ -562,6 +575,15 @@ public class Game : IGame, IEnumerable<IPiece>
 
         public bool MoveNext()
         {
+            for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
+            {
+                this.move = new Move(this.design, this.from, this.to);
+                if (this.game.CanMake(this.move) == this.to)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
     }
