@@ -40,7 +40,7 @@ public interface IPiece
     PieceDesign Design { get; }
     PieceColor Color => Piece.GetColor(this.Design);
     PieceType Type => Piece.GetType(this.Design);
-    char Char => Piece.GetChar(this.Design);
+    char Symbol => Piece.GetSymbol(this.Design);
 }
 
 public sealed class Piece : IPiece
@@ -77,7 +77,7 @@ public sealed class Piece : IPiece
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PieceType GetType(PieceDesign design) => (PieceType)((int)design / 2);
 
-    public static char GetChar(PieceDesign design) =>
+    public static char GetSymbol(PieceDesign design) =>
         design switch
         {
             PieceDesign.WhitePawn => '\u2659',

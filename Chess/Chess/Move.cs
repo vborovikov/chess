@@ -296,13 +296,13 @@ static class Movement
     {
         System.Diagnostics.Debug.WriteLine($"Moves for {design} at {square}");
 
-        var pieceChar = Piece.GetChar(design);
+        var pieceSymbol = Piece.GetSymbol(design);
         var moves = GetMoves(design, square);
         Span<char> fileStr = stackalloc char[8];
         var f = 7;
         for (var i = 63; i >= 0; --i)
         {
-            fileStr[f--] = (moves & (1UL << i)) != 0UL || (i == (int)square) ? pieceChar : '\u2610';
+            fileStr[f--] = (moves & (1UL << i)) != 0UL || (i == (int)square) ? pieceSymbol : '\u2610';
             if (i % 8 == 0)
             {
                 f = 7;
