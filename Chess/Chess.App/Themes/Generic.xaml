@@ -59,7 +59,7 @@
                         <Trigger Property="Design"
                                  Value="WhiteRook">
                             <Setter Property="Source"
-                                    Value="Resources/Chess/WhiteTower.png"
+                                    Value="Resources/Chess/WhiteRook.png"
                                     TargetName="PieceImage" />
                         </Trigger>
                         <Trigger Property="Design"
@@ -95,7 +95,7 @@
                         <Trigger Property="Design"
                                  Value="BlackRook">
                             <Setter Property="Source"
-                                    Value="Resources/Chess/BlackTower.png"
+                                    Value="Resources/Chess/BlackRook.png"
                                     TargetName="PieceImage" />
                         </Trigger>
                         <Trigger Property="Design"
