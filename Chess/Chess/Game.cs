@@ -35,6 +35,18 @@ public class GameEventArgs : EventArgs
     public Square PreviousSquare { get; }
 }
 
+public class MoveEventArgs : EventArgs
+{
+    public MoveEventArgs(Move whiteMove, Move blackMove)
+    {
+        this.WhiteMove = whiteMove;
+        this.BlackMove = blackMove;
+    }
+
+    public Move WhiteMove { get; }
+    public Move BlackMove { get; }
+}
+
 public interface IGame
 {
     bool Move(IPiece piece, Square square);
@@ -62,7 +74,7 @@ public class Game : IGame, IEnumerable<IPiece>
     public event EventHandler? BoardReset;
     public event EventHandler<GameEventArgs>? PieceTaken;
     public event EventHandler<GameEventArgs>? PieceMoved;
-    //todo: public event EventHandler<MoveEventArgs>? FullMove;
+    public event EventHandler<MoveEventArgs>? FullMove;
     public event EventHandler? Check;
     public event EventHandler? Checkmate;
 
@@ -98,6 +110,13 @@ public class Game : IGame, IEnumerable<IPiece>
 
     private void CheckPosition()
     {
+        WriteLine(this.position.ToString());
+
+        if (this.Color == PieceColor.White)
+        {
+            //this.FullMove?.Invoke(this, new MoveEventArgs());
+        }
+
         if (IsCheckFor(this.Color))
         {
             this.Check?.Invoke(this, EventArgs.Empty);
@@ -127,13 +146,13 @@ public class Game : IGame, IEnumerable<IPiece>
                 {
                     if (square == kingSquare)
                     {
-                        return false;
+                        return true;
                     }
                 }
             }
         }
 
-        return true;
+        return false;
     }
 
     private bool IsCheckFor(PieceColor color)

@@ -34,6 +34,32 @@ public sealed class Position : IBoard, ICloneable
 
     public PieceEnumerator Pieces => new(this);
 
+    public override string ToString()
+    {
+        return String.Create(Square.Last - Square.First + 1 + (7 * Environment.NewLine.Length), this.board, (span, pieces) =>
+        {
+            var index = 0;
+            var length = span.Length;
+            var newLine = Environment.NewLine;
+            for (var rank = SquareRank.Eight; rank >= SquareRank.One; --rank)
+            {
+                for (var file = SquareFile.A; file <= SquareFile.H; ++file)
+                {
+                    var square = Piece.GetSquare(file, rank);
+                    var piece = pieces[(int)square];
+                    span[index++] = piece is not null ? piece.Symbol : '\u2610';
+                    if (file == SquareFile.H && index < length)
+                    {
+                        for (var i = 0; i < newLine.Length; ++i)
+                        {
+                            span[index++] = newLine[i];
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public Square Find(IPiece piece)
     {
         if (piece is null)
