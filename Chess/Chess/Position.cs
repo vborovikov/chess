@@ -80,6 +80,12 @@ public sealed class Position : IBoard, ICloneable
         return takenPiece;
     }
 
+    private void ChangeBack(Square from, Square to, IPiece takenPiece)
+    {
+        this.board[(int)from] = this.board[(int)to];
+        this.board[(int)to] = takenPiece;
+    }
+
     public Square CanChange(Move move)
     {
         if (move.IsValid)
@@ -110,6 +116,34 @@ public sealed class Position : IBoard, ICloneable
     public MoveEnumerator GetMoves(IPiece piece)
     {
         return new MoveEnumerator(this, piece);
+    }
+
+    public LegalMoveEnumerator GetLegalMoves(IPiece piece, bool canSacrifice = true)
+    {
+        return new LegalMoveEnumerator(this, piece, canSacrifice);
+    }
+
+    public bool IsInCheckFor(IPiece piece)
+    {
+        var pieceSquare = Find(piece);
+        foreach (var otherPiece in this.board)
+        {
+            if (otherPiece is not null && otherPiece != piece && otherPiece.Color != piece.Color)
+            {
+                var attack = new Move(otherPiece.Design, Find(otherPiece), pieceSquare);
+                if (CanChange(attack) == pieceSquare)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsInCheck(PieceColor color)
+    {
+        return IsInCheckFor(color == PieceColor.White ? this.game.WhiteKing : this.game.BlackKing);
     }
 
     void IBoard.Clear()
@@ -195,6 +229,52 @@ public sealed class Position : IBoard, ICloneable
                 if (this.position.CanChange(this.move) == this.to)
                 {
                     return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    public struct LegalMoveEnumerator
+    {
+        private readonly Position position;
+        private readonly IPiece piece;
+        private readonly bool canSacrifice;
+        private readonly Square from;
+        private Square to;
+        private Move move;
+
+        public LegalMoveEnumerator(Position position, IPiece piece, bool canSacrifice)
+        {
+            this.position = position.Clone();
+            this.piece = piece;
+            this.canSacrifice = canSacrifice;
+            this.from = piece.Square;
+            this.to = Square.None;
+            this.move = default;
+        }
+
+        public Move Current => this.move;
+
+        public LegalMoveEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
+            for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
+            {
+                this.move = new Move(this.piece.Design, this.from, this.to);
+                if (this.position.CanChange(this.move) == this.to)
+                {
+                    var takenPiece = this.position.Change(this.from, this.to);
+                    
+                    var inCheck = (!this.canSacrifice && this.position.IsInCheckFor(this.piece)) || 
+                        (this.piece.Type != PieceType.King && this.position.IsInCheck(this.piece.Color));
+                    
+                    this.position.ChangeBack(this.from, this.to, takenPiece);
+                    
+                    if (!inCheck)
+                        return true;
                 }
             }
 

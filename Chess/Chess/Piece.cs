@@ -1,5 +1,6 @@
 ﻿namespace Chess;
 
+using System;
 using System.Runtime.CompilerServices;
 
 public enum PieceColor
@@ -41,13 +42,14 @@ public interface IPiece
     PieceColor Color => Piece.GetColor(this.Design);
     PieceType Type => Piece.GetType(this.Design);
     char Symbol => Piece.GetSymbol(this.Design);
+    char Char => Piece.GetChar(this.Type);
 }
 
 public sealed class Piece : IPiece
 {
-    private readonly Game game;
+    private readonly IGame game;
 
-    private Piece(Game game, PieceDesign design)
+    private Piece(IGame game, PieceDesign design)
     {
         this.game = game;
         this.Design = design;
@@ -57,7 +59,7 @@ public sealed class Piece : IPiece
 
     public PieceDesign Design { get; }
 
-    public static Piece Create(Game game, PieceDesign design)
+    public static Piece Create(IGame game, PieceDesign design)
     {
         return new Piece(game, design);
     }
@@ -77,21 +79,31 @@ public sealed class Piece : IPiece
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PieceType GetType(PieceDesign design) => (PieceType)((int)design / 2);
 
-    public static char GetSymbol(PieceDesign design) =>
-        design switch
-        {
-            PieceDesign.WhitePawn => '\u2659',
-            PieceDesign.BlackPawn => '\u265F',
-            PieceDesign.WhiteKnight => '\u2658',
-            PieceDesign.BlackKnight => '\u265E',
-            PieceDesign.WhiteBishop => '\u2657',
-            PieceDesign.BlackBishop => '\u265D',
-            PieceDesign.WhiteRook => '\u2656',
-            PieceDesign.BlackRook => '\u265C',
-            PieceDesign.WhiteQueen => '\u2655',
-            PieceDesign.BlackQueen => '\u265B',
-            PieceDesign.WhiteKing => '\u2654',
-            PieceDesign.BlackKing => '\u265A',
-            _ => '?',
-        };
+    public static char GetSymbol(PieceDesign design) => design switch
+    {
+        PieceDesign.WhitePawn => '\u2659',
+        PieceDesign.BlackPawn => '\u265F',
+        PieceDesign.WhiteKnight => '\u2658',
+        PieceDesign.BlackKnight => '\u265E',
+        PieceDesign.WhiteBishop => '\u2657',
+        PieceDesign.BlackBishop => '\u265D',
+        PieceDesign.WhiteRook => '\u2656',
+        PieceDesign.BlackRook => '\u265C',
+        PieceDesign.WhiteQueen => '\u2655',
+        PieceDesign.BlackQueen => '\u265B',
+        PieceDesign.WhiteKing => '\u2654',
+        PieceDesign.BlackKing => '\u265A',
+        _ => '?',
+    };
+
+    public static char GetChar(PieceType type) => type switch
+    {
+        PieceType.Pawn => 'P',
+        PieceType.Knight => 'N',
+        PieceType.Bishop => 'B',
+        PieceType.Rook => 'R',
+        PieceType.Queen => 'Q',
+        PieceType.King => 'K',
+        _ => '?',
+    };
 }

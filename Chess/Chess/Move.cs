@@ -30,6 +30,11 @@ public readonly struct Move : IEquatable<Move>
         this.value = ((int)from << FromShift) | ((int)to << ToShift) | ((int)design << DesignShift);
     }
 
+    public Move(IPiece piece, Square to)
+        : this(piece.Design, piece.Square, to)
+    {
+    }
+
     public PieceDesign Design => (PieceDesign)((this.value >> DesignShift) & DesignMask);
     public Square From => (Square)((this.value >> FromShift) & SquareMask);
     public Square To => (Square)((this.value >> ToShift) & SquareMask);

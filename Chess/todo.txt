@@ -1,0 +1,2 @@
+attack  - a next move a piece can take an opposite color piece
+defence - a next move a piece can take an opposite color piece which is currently attacking or going to attack

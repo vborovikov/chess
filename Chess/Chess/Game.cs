@@ -47,12 +47,13 @@ public class MoveEventArgs : EventArgs
     public Move BlackMove { get; }
 }
 
-public interface IGame
+public interface IGame : IEnumerable<IPiece>
 {
+    Square Find(IPiece piece);
     bool Move(IPiece piece, Square square);
 }
 
-public class Game : IGame, IEnumerable<IPiece>
+public class Game : IGame
 {
     public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -68,8 +69,8 @@ public class Game : IGame, IEnumerable<IPiece>
     public PieceColor Color { get; private set; }
     public Castling Castling { get; private set; }
 
-    private IPiece WhiteKing => this.pieces[0];
-    private IPiece BlackKing => this.pieces[1];
+    internal IPiece WhiteKing => this.pieces[0];
+    internal IPiece BlackKing => this.pieces[1];
 
     public event EventHandler? BoardReset;
     public event EventHandler<GameEventArgs>? PieceTaken;
@@ -77,12 +78,13 @@ public class Game : IGame, IEnumerable<IPiece>
     public event EventHandler<MoveEventArgs>? FullMove;
     public event EventHandler? Check;
     public event EventHandler? Checkmate;
+    public event EventHandler? Stalemate;
 
     public Square Find(IPiece piece) => this.position.Find(piece);
 
     public bool Move(IPiece piece, Square square)
     {
-        var pieceSquare = Find(piece);
+        var pieceSquare = this.position.Find(piece);
         if (pieceSquare == Square.None || square == pieceSquare ||
             square < Square.First || square > Square.Last)
         {
@@ -110,66 +112,32 @@ public class Game : IGame, IEnumerable<IPiece>
 
     private void CheckPosition()
     {
-        WriteLine(this.position.ToString());
-
+        var king = this.BlackKing;
         if (this.Color == PieceColor.White)
         {
-            //this.FullMove?.Invoke(this, new MoveEventArgs());
+            king = this.WhiteKing;
+            //todo: if history has at least two moves
+            this.FullMove?.Invoke(this, new MoveEventArgs(default, default));
         }
 
-        if (IsCheckFor(this.Color))
+        var check = this.position.IsInCheckFor(king);
+        var hasLegalMoves = this.position.GetLegalMoves(king, canSacrifice: false).MoveNext();
+
+        if (check)
         {
+            WriteLine($"{king.Color} king is in check");
             this.Check?.Invoke(this, EventArgs.Empty);
-            if (IsCheckmateFor(this.Color))
+            if (!hasLegalMoves)
             {
-                WriteLine("Checkmate!");
+                WriteLine($"{king.Color} king is in checkmate");
                 this.Checkmate?.Invoke(this, EventArgs.Empty);
             }
         }
-    }
-
-    private bool IsCheckmateFor(PieceColor color)
-    {
-        var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
-        var kingSquare = Find(king);
-
-        foreach (var piece in this.position.Pieces)
-        {
-            if (piece.Color != color)
-            {
-                continue;
-            }
-
-            foreach (var move in this.position.GetMoves(piece))
-            {
-                foreach (var square in move.GetPath())
-                {
-                    if (square == kingSquare)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private bool IsCheckFor(PieceColor color)
-    {
-        var king = color == PieceColor.White ? this.WhiteKing : this.BlackKing;
-        var kingSquare = Find(king);
-
-        foreach (var piece in this.position.Pieces)
-        {
-            if (piece != king && piece.Color != color && Movement.CanMove(piece.Design, Find(piece), kingSquare))
-            {
-                WriteLine($"Check by {piece.Design}! {Find(piece)}-{kingSquare}");
-                return true;
-            }
-        }
-
-        return false;
+        //else if (!hasLegalMoves)
+        //{
+        //    WriteLine("Stalemate");
+        //    this.Stalemate?.Invoke(this, EventArgs.Empty);
+        //}
     }
 
     private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
@@ -183,7 +151,7 @@ public class Game : IGame, IEnumerable<IPiece>
             newSquare = makeTo;
             return true;
         }
-        
+
         return false;
     }
 
@@ -261,22 +229,7 @@ public class Game : IGame, IEnumerable<IPiece>
 
     private static char PieceToFen(IPiece piece)
     {
-        return piece.Design switch
-        {
-            PieceDesign.WhitePawn => 'P',
-            PieceDesign.WhiteKnight => 'N',
-            PieceDesign.WhiteBishop => 'B',
-            PieceDesign.WhiteRook => 'R',
-            PieceDesign.WhiteQueen => 'Q',
-            PieceDesign.WhiteKing => 'K',
-            PieceDesign.BlackPawn => 'p',
-            PieceDesign.BlackKnight => 'n',
-            PieceDesign.BlackBishop => 'b',
-            PieceDesign.BlackRook => 'r',
-            PieceDesign.BlackQueen => 'q',
-            PieceDesign.BlackKing => 'k',
-            _ => 'x',
-        };
+        return piece.Color == PieceColor.White ? Char.ToUpperInvariant(piece.Char) : Char.ToLowerInvariant(piece.Char);
     }
 
     public static Game FromFen(ReadOnlySpan<char> fenRecord)
@@ -307,6 +260,7 @@ public class Game : IGame, IEnumerable<IPiece>
         }
 
         this.BoardReset?.Invoke(this, EventArgs.Empty);
+        CheckPosition();
     }
 
     private void ResetPGN(IBoard board, ReadOnlySpan<char> record)
