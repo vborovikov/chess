@@ -124,6 +124,8 @@ public sealed class Position : IBoard, ICloneable
             {
                 return move.To;
             }
+
+            //todo: detect en passant
         }
 
         return Square.None;

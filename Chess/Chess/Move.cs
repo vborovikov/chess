@@ -82,7 +82,7 @@ public readonly struct Move : IEquatable<Move>
 
         public SquareEnumerator(Move move)
         {
-            this.moves = move.IsValid ? GetMap(move.Design, move.From) : EmptyMap;
+            this.moves = move.IsValid || move.IsCaptureByPawn ? GetMap(move.Design, move.From) : EmptyMap;
             this.target = move.To;
             this.step = GetDirectionOffset(move.From, move.To);
             this.square = Piece.GetType(move.Design) == PieceType.Knight ? move.To - this.step : move.From;
@@ -94,6 +94,9 @@ public readonly struct Move : IEquatable<Move>
                 return false;
 
             this.square += this.step;
+            if (this.square == this.target)
+                return true;
+            
             while ((this.moves & (1UL << (int)this.square)) == 0UL)
             {
                 this.square += this.step;

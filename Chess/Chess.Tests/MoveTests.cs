@@ -53,4 +53,14 @@ public class MoveTests
         var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.a5);
         Assert.AreEqual(PieceDesign.BlackPawn, move.Design);
     }
+
+    [TestMethod]
+    public void GetPath_CaptureByPawn_ToSquare()
+    {
+        var move = new Move(PieceDesign.BlackPawn, Square.a5, Square.b4);
+        var path = move.GetPath();
+        Assert.IsTrue(path.MoveNext());
+        Assert.AreEqual(Square.b4, path.Current);
+    }
+
 }
