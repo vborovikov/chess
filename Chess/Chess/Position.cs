@@ -106,8 +106,24 @@ public sealed class Position : IBoard, ICloneable
             }
 
             var otherPiece = this.board[(int)makeTo];
-            if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
-                return makeTo;
+            if (Piece.GetType(move.Design) == PieceType.Pawn)
+            {
+                if (otherPiece is null)
+                    return makeTo;
+            }
+            else
+            {
+                if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
+                    return makeTo;
+            }
+        }
+        else if (move.IsCaptureByPawn)
+        {
+            var otherPiece = this.board[(int)move.To];
+            if (otherPiece is not null && otherPiece.Color != Piece.GetColor(move.Design))
+            {
+                return move.To;
+            }
         }
 
         return Square.None;

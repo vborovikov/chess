@@ -46,4 +46,11 @@ public class MoveTests
         var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.h1);
         Assert.IsFalse(move.GetPath().MoveNext());
     }
+
+    [TestMethod]
+    public void MoveDesign_BlackPawn_Equal()
+    {
+        var move = new Move(PieceDesign.BlackPawn, Square.a7, Square.a5);
+        Assert.AreEqual(PieceDesign.BlackPawn, move.Design);
+    }
 }

@@ -25,7 +25,7 @@ public class MainPresenter : Presenter, IGame
         this.game.PieceTaken += (sender, e) => this.Game.Remove(e.Piece);
         this.game.PieceMoved += (sender, e) => RaisePropertyChanged(nameof(this.Fen));
 
-        this.Fen = Chess.Game.FenStartingPosition;
+        this.Fen = Chess.Game.FenInitialPosition;
     }
 
     public ObservableCollection<IPiece> Game { get; }

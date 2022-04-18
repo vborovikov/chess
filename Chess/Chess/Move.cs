@@ -40,6 +40,25 @@ public readonly struct Move : IEquatable<Move>
     public Square To => (Square)((this.value >> ToShift) & SquareMask);
     public bool IsValid => CanMove(this.Design, this.From, this.To);
 
+    public bool IsCaptureByPawn
+    {
+        get
+        {
+            var direction = GetDirection(this.From, this.To);
+            if (CanOffset(this.From, direction) && Offset(this.From, direction) == this.To)
+            {
+                return this.Design switch
+                {
+                    PieceDesign.WhitePawn => direction == PieceMoveDirection.UpLeft || direction == PieceMoveDirection.UpRight,
+                    PieceDesign.BlackPawn => direction == PieceMoveDirection.DownLeft || direction == PieceMoveDirection.DownRight,
+                    _ => false
+                };
+            }
+
+            return false;
+        }
+    }
+
     public SquareEnumerator GetPath() => new(this);
 
     public override string ToString() => $"{this.Design} {this.From} -> {this.To}";
@@ -88,21 +107,6 @@ public readonly struct Move : IEquatable<Move>
         public Square Current => this.square;
 
         public SquareEnumerator GetEnumerator() => this;
-
-        private static int GetDirectionOffset(Square from, Square to)
-        {
-            var orientation = from < to ? 1 : -1;
-            var distance = from - to;
-
-            if (distance % 9 == 0)
-                return orientation * 9;
-            if (distance % 8 == 0)
-                return orientation * 8;
-            if (distance % 7 == 0)
-                return orientation * 7;
-
-            return orientation;
-        }
     }
 }
 
@@ -141,6 +145,27 @@ static class Movement
         return (moves[(int)design][(int)from] & (1UL << (int)to)) != 0UL;
     }
 
+    public static int GetDirectionOffset(Square from, Square to)
+    {
+        var orientation = from < to ? 1 : -1;
+        var distance = from - to;
+
+        if (distance % 9 == 0)
+            return orientation * 9;
+        if (distance % 8 == 0)
+            return orientation * 8;
+        if (distance % 7 == 0)
+            return orientation * 7;
+
+        return orientation;
+    }
+
+    public static PieceMoveDirection GetDirection(Square from, Square to)
+    {
+        var directionOffset = GetDirectionOffset(from, to);
+        return (PieceMoveDirection)Array.IndexOf(directionOffsets, directionOffset);
+    }
+    
     private static ulong GetMoves(PieceDesign design, Square square)
     {
         return design switch
@@ -182,19 +207,19 @@ static class Movement
     {
         var moves = EmptyMap;
 
-        TrySetKnightMove(ref moves, square, 
+        TrySetKnightMove(ref moves, square,
             PieceMoveDirection.UpLeft, PieceMoveDirection.Left);
         TrySetKnightMove(ref moves, square,
             PieceMoveDirection.UpLeft, PieceMoveDirection.Up);
-        
-        TrySetKnightMove(ref moves, square, 
+
+        TrySetKnightMove(ref moves, square,
             PieceMoveDirection.UpRight, PieceMoveDirection.Right);
-        TrySetKnightMove(ref moves, square, 
+        TrySetKnightMove(ref moves, square,
             PieceMoveDirection.UpRight, PieceMoveDirection.Up);
 
-        TrySetKnightMove(ref moves, square, 
+        TrySetKnightMove(ref moves, square,
             PieceMoveDirection.DownLeft, PieceMoveDirection.Left);
-        TrySetKnightMove(ref moves, square, 
+        TrySetKnightMove(ref moves, square,
             PieceMoveDirection.DownLeft, PieceMoveDirection.Down);
 
         TrySetKnightMove(ref moves, square,
@@ -220,9 +245,27 @@ static class Movement
     {
         var moves = EmptyMap;
 
+        if (color == PieceColor.White)
+        {
+            if (Piece.GetRank(square) == SquareRank.One)
+                return moves;
+        }
+        else
+        {
+            if (Piece.GetRank(square) == SquareRank.Eight)
+                return moves;
+        }
+
+        //var leftCaptureOffset = color == PieceColor.White ?
+        //    directionOffsets[(int)PieceMoveDirection.UpLeft] : directionOffsets[(int)PieceMoveDirection.DownLeft];
+        //TrySetMove(ref moves, square + leftCaptureOffset);
+
+        //var rightCaptureOffset = color == PieceColor.White ?
+        //    directionOffsets[(int)PieceMoveDirection.UpRight] : directionOffsets[(int)PieceMoveDirection.DownRight];
+        //TrySetMove(ref moves, square + rightCaptureOffset);
+
         var offset = color == PieceColor.White ?
             directionOffsets[(int)PieceMoveDirection.Up] : directionOffsets[(int)PieceMoveDirection.Down];
-
         var to = square + offset;
         TrySetMove(ref moves, to);
 
@@ -255,7 +298,7 @@ static class Movement
         {
             if (!CanOffset(square, direction))
                 continue;
-            
+
             var offset = directionOffsets[(int)direction];
             var to = square + offset;
             while (TrySetMove(ref moves, to))
@@ -274,7 +317,7 @@ static class Movement
         return moves;
     }
 
-    private static bool CanOffset(Square from, PieceMoveDirection direction)
+    internal static bool CanOffset(Square from, PieceMoveDirection direction)
     {
         return direction switch
         {
@@ -288,6 +331,11 @@ static class Movement
             PieceMoveDirection.DownRight when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.H => false,
             _ => true
         };
+    }
+
+    internal static Square Offset(Square from, PieceMoveDirection direction)
+    {
+        return from + directionOffsets[(int)direction];
     }
 
     private static bool CanOffset(Square from, params PieceMoveDirection[] directions)

@@ -8,8 +8,8 @@ public class FenTests
     [TestMethod]
     public void FromFen_StartingPosition_SamePosition()
     {
-        var game = Game.FromFen(Game.FenStartingPosition);
+        var game = Game.FromFen(Game.FenInitialPosition);
 
-        Assert.AreEqual(Game.FenStartingPosition[..^6], game.ToString());
+        Assert.AreEqual(Game.FenInitialPosition[..^6], game.ToString());
     }
 }

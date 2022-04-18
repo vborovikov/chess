@@ -55,7 +55,7 @@ public interface IGame : IEnumerable<IPiece>
 
 public class Game : IGame
 {
-    public const string FenStartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    public const string FenInitialPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     private readonly Position position;
     private readonly IPiece[] pieces;
