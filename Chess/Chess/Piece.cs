@@ -59,6 +59,8 @@ public sealed class Piece : IPiece
 
     public PieceDesign Design { get; }
 
+    public override string ToString() => this.Design.ToString();
+
     public static Piece Create(IGame game, PieceDesign design)
     {
         return new Piece(game, design);

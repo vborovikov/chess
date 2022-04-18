@@ -42,6 +42,8 @@ public readonly struct Move : IEquatable<Move>
 
     public SquareEnumerator GetPath() => new(this);
 
+    public override string ToString() => $"{this.Design} {this.From} -> {this.To}";
+
     public override bool Equals(object? obj) => obj is Move move && Equals(move);
 
     public bool Equals(Move other) => this.value == other.value;
@@ -180,35 +182,38 @@ static class Movement
     {
         var moves = EmptyMap;
 
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.UpLeft] +
-            directionOffsets[(int)PieceMoveDirection.Left]);
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.UpLeft] +
-            directionOffsets[(int)PieceMoveDirection.Up]);
+        TrySetKnightMove(ref moves, square, 
+            PieceMoveDirection.UpLeft, PieceMoveDirection.Left);
+        TrySetKnightMove(ref moves, square,
+            PieceMoveDirection.UpLeft, PieceMoveDirection.Up);
+        
+        TrySetKnightMove(ref moves, square, 
+            PieceMoveDirection.UpRight, PieceMoveDirection.Right);
+        TrySetKnightMove(ref moves, square, 
+            PieceMoveDirection.UpRight, PieceMoveDirection.Up);
 
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.UpRight] +
-            directionOffsets[(int)PieceMoveDirection.Right]);
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.UpRight] +
-            directionOffsets[(int)PieceMoveDirection.Up]);
+        TrySetKnightMove(ref moves, square, 
+            PieceMoveDirection.DownLeft, PieceMoveDirection.Left);
+        TrySetKnightMove(ref moves, square, 
+            PieceMoveDirection.DownLeft, PieceMoveDirection.Down);
 
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.DownLeft] +
-            directionOffsets[(int)PieceMoveDirection.Left]);
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.DownLeft] +
-            directionOffsets[(int)PieceMoveDirection.Down]);
-
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.DownRight] +
-            directionOffsets[(int)PieceMoveDirection.Right]);
-        TrySetMove(ref moves, square +
-            directionOffsets[(int)PieceMoveDirection.DownRight] +
-            directionOffsets[(int)PieceMoveDirection.Down]);
+        TrySetKnightMove(ref moves, square,
+            PieceMoveDirection.DownRight, PieceMoveDirection.Right);
+        TrySetKnightMove(ref moves, square,
+            PieceMoveDirection.DownRight, PieceMoveDirection.Down);
 
         return moves;
+    }
+
+    private static bool TrySetKnightMove(ref ulong moves, Square square, PieceMoveDirection direction1, PieceMoveDirection direction2)
+    {
+        if (CanOffset(square, direction1, direction2))
+        {
+            return TrySetMove(ref moves, square +
+                directionOffsets[(int)direction1] + directionOffsets[(int)direction2]);
+        }
+
+        return false;
     }
 
     private static ulong GetPawnMoves(PieceColor color, Square square)
@@ -283,6 +288,18 @@ static class Movement
             PieceMoveDirection.DownRight when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.H => false,
             _ => true
         };
+    }
+
+    private static bool CanOffset(Square from, params PieceMoveDirection[] directions)
+    {
+        foreach (var direction in directions)
+        {
+            if (!CanOffset(from, direction))
+                return false;
+            from += directionOffsets[(int)direction];
+        }
+
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

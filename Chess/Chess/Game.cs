@@ -72,6 +72,8 @@ public class Game : IGame
     internal IPiece WhiteKing => this.pieces[0];
     internal IPiece BlackKing => this.pieces[1];
 
+    internal Position Position => this.position;
+
     public event EventHandler? BoardReset;
     public event EventHandler<GameEventArgs>? PieceTaken;
     public event EventHandler<GameEventArgs>? PieceMoved;

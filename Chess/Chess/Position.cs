@@ -80,7 +80,7 @@ public sealed class Position : IBoard, ICloneable
         return takenPiece;
     }
 
-    private void ChangeBack(Square from, Square to, IPiece takenPiece)
+    internal void ChangeBack(Square from, Square to, IPiece takenPiece)
     {
         this.board[(int)from] = this.board[(int)to];
         this.board[(int)to] = takenPiece;
@@ -144,6 +144,24 @@ public sealed class Position : IBoard, ICloneable
     public bool IsInCheck(PieceColor color)
     {
         return IsInCheckFor(color == PieceColor.White ? this.game.WhiteKing : this.game.BlackKing);
+    }
+
+    public bool IsLegal(Move move, IPiece piece, bool canSelfSacrifice = true)
+    {
+        if (CanChange(move) == move.To)
+        {
+            var takenPiece = Change(move.From, move.To);
+
+            var inCheck = (!canSelfSacrifice && IsInCheckFor(piece)) ||
+                (piece.Type != PieceType.King && IsInCheck(piece.Color));
+
+            ChangeBack(move.From, move.To, takenPiece);
+
+            if (!inCheck)
+                return true;
+        }
+        
+        return false;
     }
 
     void IBoard.Clear()
@@ -247,9 +265,9 @@ public sealed class Position : IBoard, ICloneable
 
         public LegalMoveEnumerator(Position position, IPiece piece, bool canSacrifice)
         {
-            this.position = position.Clone();
+            this.position = position/*.Clone()*/;
             this.piece = piece;
-            this.canSacrifice = canSacrifice;
+            this.canSacrifice = piece.Type != PieceType.King && canSacrifice;
             this.from = piece.Square;
             this.to = Square.None;
             this.move = default;
@@ -264,17 +282,9 @@ public sealed class Position : IBoard, ICloneable
             for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
             {
                 this.move = new Move(this.piece.Design, this.from, this.to);
-                if (this.position.CanChange(this.move) == this.to)
+                if (this.position.IsLegal(this.move, this.piece, this.canSacrifice))
                 {
-                    var takenPiece = this.position.Change(this.from, this.to);
-                    
-                    var inCheck = (!this.canSacrifice && this.position.IsInCheckFor(this.piece)) || 
-                        (this.piece.Type != PieceType.King && this.position.IsInCheck(this.piece.Color));
-                    
-                    this.position.ChangeBack(this.from, this.to, takenPiece);
-                    
-                    if (!inCheck)
-                        return true;
+                    return true;
                 }
             }
 
