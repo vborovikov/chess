@@ -16,6 +16,9 @@ public sealed class Position : IBoard, ICloneable
     private readonly Game game;
     private readonly IPiece[] board;
 
+    private Square enPassant;
+    private Square prevEnPassant;
+
     public Position(Game game)
         : this(game, new IPiece[Square.Last - Square.First + 1])
     {
@@ -25,6 +28,7 @@ public sealed class Position : IBoard, ICloneable
     {
         this.game = game;
         this.board = board;
+        this.enPassant = Square.None;
     }
 
     public IPiece this[Square square]
@@ -33,6 +37,8 @@ public sealed class Position : IBoard, ICloneable
     }
 
     public PieceEnumerator Pieces => new(this);
+
+    public Square EnPassant => this.enPassant;
 
     public override string ToString()
     {
@@ -69,21 +75,57 @@ public sealed class Position : IBoard, ICloneable
         return index > -1 ? (Square)index : Square.None;
     }
 
-    internal IPiece Change(Square from, Square to)
+    internal IPiece Change(Move move)
     {
-        var movedPiece = this.board[(int)from];
-        var takenPiece = this.board[(int)to];
+        var movedPiece = this.board[(int)move.From];
+        var takenPiece = this.board[(int)move.To];
 
-        this.board[(int)from] = null!;
-        this.board[(int)to] = movedPiece;
+        this.board[(int)move.From] = null!;
+        this.board[(int)move.To] = movedPiece;
 
-        return takenPiece;
+        // update en passant
+        this.prevEnPassant = this.enPassant;
+        if (movedPiece.Type == PieceType.Pawn)
+        {
+            // detect two-square move
+            var twoSquareMove = Piece.GetFile(move.From) == Piece.GetFile(move.To) &&
+                Math.Abs(Piece.GetRank(move.From) - Piece.GetRank(move.To)) == 2;
+            if (twoSquareMove)
+            {
+                var pawnSquare = Piece.GetSquare(Piece.GetFile(move.To), 
+                    Piece.GetRank(move.To) + (movedPiece.Color == PieceColor.White ? -1 : +1));
+                this.enPassant = pawnSquare;
+            }
+            else if (move.IsCaptureByPawn)
+            {
+                // detect en passant capture
+                if (takenPiece is null && move.To == this.enPassant)
+                {
+                    // find the square of the pawn to take
+                    var pawnSquare = Piece.GetSquare(Piece.GetFile(this.enPassant),
+                        Piece.GetRank(this.enPassant) + (movedPiece.Color == PieceColor.White ? -1 : +1));
+                    takenPiece = this.board[(int)pawnSquare];
+                    this.enPassant = Square.None;
+                }
+            }
+            else
+            {
+                this.enPassant = Square.None;
+            }
+        }
+        else
+        {
+            this.enPassant = Square.None;
+        }
+
+        return takenPiece!;
     }
 
-    internal void ChangeBack(Square from, Square to, IPiece takenPiece)
+    internal void ChangeBack(Move move, IPiece takenPiece)
     {
-        this.board[(int)from] = this.board[(int)to];
-        this.board[(int)to] = takenPiece;
+        this.board[(int)move.From] = this.board[(int)move.To];
+        this.board[(int)move.To] = takenPiece;
+        this.enPassant = this.prevEnPassant;
     }
 
     public Square CanChange(Move move)
@@ -98,7 +140,7 @@ public sealed class Position : IBoard, ICloneable
                     break;
                 }
 
-                if (this.board[(int)square] is IPiece)
+                if (this.board[(int)square] is not null)
                 {
                     makeTo = square;
                     break;
@@ -125,7 +167,10 @@ public sealed class Position : IBoard, ICloneable
                 return move.To;
             }
 
-            //todo: detect en passant
+            if (move.To == this.enPassant)
+            {
+                return move.To;
+            }
         }
 
         return Square.None;
@@ -168,23 +213,24 @@ public sealed class Position : IBoard, ICloneable
     {
         if (CanChange(move) == move.To)
         {
-            var takenPiece = Change(move.From, move.To);
+            var takenPiece = Change(move);
 
             var inCheck = (!canSelfSacrifice && IsInCheckFor(piece)) ||
                 (piece.Type != PieceType.King && IsInCheck(piece.Color));
 
-            ChangeBack(move.From, move.To, takenPiece);
+            ChangeBack(move, takenPiece);
 
             if (!inCheck)
                 return true;
         }
-        
+
         return false;
     }
 
     void IBoard.Clear()
     {
         Array.Clear(this.board);
+        this.enPassant = Square.None;
     }
 
     void IBoard.Place(IPiece piece, Square square)

@@ -95,7 +95,7 @@ public class Game : IGame
 
         if (CanMove(piece, pieceSquare, ref square))
         {
-            var takenPiece = this.position.Change(pieceSquare, square);
+            var takenPiece = this.position.Change(new Move(piece.Design, pieceSquare, square));
 
             this.Color = this.Color == PieceColor.White ? PieceColor.Black : PieceColor.White;
             if (takenPiece is not null)
@@ -224,6 +224,17 @@ public class Game : IGame
             {
                 fen.Append('q');
             }
+        }
+
+        // en passant
+        fen.Append(' ');
+        if (this.position.EnPassant == Square.None)
+        {
+            fen.Append('-');
+        }
+        else
+        {
+            fen.Append(this.position.EnPassant.ToString());
         }
 
         return fen.ToString();

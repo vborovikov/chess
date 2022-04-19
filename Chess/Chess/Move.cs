@@ -259,14 +259,6 @@ static class Movement
                 return moves;
         }
 
-        //var leftCaptureOffset = color == PieceColor.White ?
-        //    directionOffsets[(int)PieceMoveDirection.UpLeft] : directionOffsets[(int)PieceMoveDirection.DownLeft];
-        //TrySetMove(ref moves, square + leftCaptureOffset);
-
-        //var rightCaptureOffset = color == PieceColor.White ?
-        //    directionOffsets[(int)PieceMoveDirection.UpRight] : directionOffsets[(int)PieceMoveDirection.DownRight];
-        //TrySetMove(ref moves, square + rightCaptureOffset);
-
         var offset = color == PieceColor.White ?
             directionOffsets[(int)PieceMoveDirection.Up] : directionOffsets[(int)PieceMoveDirection.Down];
         var to = square + offset;

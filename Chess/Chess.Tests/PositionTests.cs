@@ -45,9 +45,9 @@ public class PositionTests
 
             foreach (var move in position.GetLegalMoves(piece))
             {
-                var takenPiece = position.Change(move.From, move.To);
+                var takenPiece = position.Change(move);
                 count += CountMoves(position, color == PieceColor.White ? PieceColor.Black : PieceColor.White, depth - 1);
-                position.ChangeBack(move.From, move.To, takenPiece);
+                position.ChangeBack(move, takenPiece);
             }
         }
 
