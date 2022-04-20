@@ -95,12 +95,12 @@ public class Game : IGame
 
         if (CanMove(piece, pieceSquare, ref square))
         {
-            var takenPiece = this.position.Change(new Move(piece.Design, pieceSquare, square));
+            var move = this.position.Change(new Move(piece.Design, pieceSquare, square));
 
             this.Color = this.Color == PieceColor.White ? PieceColor.Black : PieceColor.White;
-            if (takenPiece is not null)
+            if (move.DesignTaken != PieceDesign.None)
             {
-                this.PieceTaken?.Invoke(this, new GameEventArgs(takenPiece, square));
+                this.PieceTaken?.Invoke(this, new GameEventArgs(FindSpare(move.DesignTaken), square));
             }
             this.PieceMoved?.Invoke(this, new GameEventArgs(piece, pieceSquare));
 
@@ -405,7 +405,7 @@ public class Game : IGame
         return FindSpare(design);
     }
 
-    private IPiece FindSpare(PieceDesign design)
+    internal IPiece FindSpare(PieceDesign design)
     {
         foreach (var piece in this.pieces)
         {

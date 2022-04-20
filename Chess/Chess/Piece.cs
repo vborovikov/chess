@@ -21,18 +21,19 @@ public enum PieceType
 
 public enum PieceDesign
 {
-    WhitePawn,   // 0
-    BlackPawn,   // 1
-    WhiteKnight, // 2
-    BlackKnight, // 3
-    WhiteBishop, // 4
-    BlackBishop, // 5
-    WhiteRook,   // 6
-    BlackRook,   // 7
-    WhiteQueen,  // 8
-    BlackQueen,  // 9
-    WhiteKing,   // 10
-    BlackKing,   // 11
+    None,
+    WhitePawn,   // 1
+    BlackPawn,   // 2
+    WhiteKnight, // 3
+    BlackKnight, // 4
+    WhiteBishop, // 5
+    BlackBishop, // 6
+    WhiteRook,   // 7
+    BlackRook,   // 8
+    WhiteQueen,  // 9
+    BlackQueen,  // 10
+    WhiteKing,   // 11
+    BlackKing,   // 12
 }
 
 public interface IPiece
@@ -76,10 +77,10 @@ public sealed class Piece : IPiece
     public static Square GetSquare(SquareFile file, SquareRank rank) => (Square)((((int)rank) * 8) + (int)file);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PieceColor GetColor(PieceDesign design) => (PieceColor)((int)design & 1);
+    public static PieceColor GetColor(PieceDesign design) => (PieceColor)((int)(design - 1) & 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PieceType GetType(PieceDesign design) => (PieceType)((int)design / 2);
+    public static PieceType GetType(PieceDesign design) => (PieceType)((int)(design -1) / 2);
 
     public static char GetSymbol(PieceDesign design) => design switch
     {

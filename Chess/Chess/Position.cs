@@ -17,7 +17,6 @@ public sealed class Position : IBoard, ICloneable
     private readonly IPiece[] board;
 
     private Square enPassant;
-    private Square prevEnPassant;
 
     public Position(Game game)
         : this(game, new IPiece[Square.Last - Square.First + 1])
@@ -75,7 +74,7 @@ public sealed class Position : IBoard, ICloneable
         return index > -1 ? (Square)index : Square.None;
     }
 
-    internal IPiece Change(Move move)
+    internal Move Change(Move move)
     {
         var movedPiece = this.board[(int)move.From];
         var takenPiece = this.board[(int)move.To];
@@ -83,8 +82,9 @@ public sealed class Position : IBoard, ICloneable
         this.board[(int)move.From] = null!;
         this.board[(int)move.To] = movedPiece;
 
+        var moveFlags = MoveFlags.None;
+
         // update en passant
-        this.prevEnPassant = this.enPassant;
         if (movedPiece.Type == PieceType.Pawn)
         {
             // detect two-square move
@@ -106,6 +106,8 @@ public sealed class Position : IBoard, ICloneable
                         Piece.GetRank(this.enPassant) + (movedPiece.Color == PieceColor.White ? -1 : +1));
                     takenPiece = this.board[(int)pawnSquare];
                     this.enPassant = Square.None;
+
+                    moveFlags |= MoveFlags.EnPassant;
                 }
             }
             else
@@ -118,14 +120,24 @@ public sealed class Position : IBoard, ICloneable
             this.enPassant = Square.None;
         }
 
-        return takenPiece!;
+        if (takenPiece is not null)
+            moveFlags |= MoveFlags.Capture;
+
+        return new Move(move, takenPiece?.Design ?? PieceDesign.None, moveFlags);
     }
 
-    internal void ChangeBack(Move move, IPiece takenPiece)
+    internal void ChangeBack(Move move)
     {
         this.board[(int)move.From] = this.board[(int)move.To];
-        this.board[(int)move.To] = takenPiece;
-        this.enPassant = this.prevEnPassant;
+
+        var takenSquare = move.To;
+        if (move.Flags.HasFlag(MoveFlags.EnPassant))
+        {
+            takenSquare = Piece.GetSquare(Piece.GetFile(move.To),
+                Piece.GetRank(move.To) + (Piece.GetColor(move.Design) == PieceColor.White ? -1 : +1));
+            this.enPassant = move.To;
+        }
+        this.board[(int)takenSquare] = this.game.FindSpare(move.DesignTaken);
     }
 
     public Square CanChange(Move move)
@@ -161,13 +173,14 @@ public sealed class Position : IBoard, ICloneable
         }
         else if (move.IsCaptureByPawn)
         {
-            var otherPiece = this.board[(int)move.To];
-            if (otherPiece is not null && otherPiece.Color != Piece.GetColor(move.Design))
+            var otherSquare = move.To;
+            if (otherSquare == this.enPassant)
             {
-                return move.To;
+                otherSquare = Piece.GetSquare(Piece.GetFile(move.To),
+                    Piece.GetRank(move.To) + (Piece.GetColor(move.Design) == PieceColor.White ? -1 : +1));
             }
-
-            if (move.To == this.enPassant)
+            var otherPiece = this.board[(int)otherSquare];
+            if (otherPiece is not null && otherPiece.Color != Piece.GetColor(move.Design))
             {
                 return move.To;
             }
@@ -213,12 +226,12 @@ public sealed class Position : IBoard, ICloneable
     {
         if (CanChange(move) == move.To)
         {
-            var takenPiece = Change(move);
+            move = Change(move);
 
             var inCheck = (!canSelfSacrifice && IsInCheckFor(piece)) ||
                 (piece.Type != PieceType.King && IsInCheck(piece.Color));
 
-            ChangeBack(move, takenPiece);
+            ChangeBack(move);
 
             if (!inCheck)
                 return true;

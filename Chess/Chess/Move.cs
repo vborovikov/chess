@@ -15,14 +15,36 @@ enum PieceMoveDirection
     DownRight   // -7
 }
 
+[Flags]
+public enum MoveFlags : byte
+{
+    None = 0,
+    Capture = 1 << 0,
+    EnPassant = 1 << 1,
+    Castling = 1 << 2,
+    Promotion = 1 << 3,
+    Check = 1 << 4,
+    Checkmate = 1 << 5,
+    Stalemate = 1 << 6,
+    Draw = 1 << 7
+}
+
 public readonly struct Move : IEquatable<Move>
 {
     private const int SquareMask = 0b111111;
-    private const int DesignMask = 0b1111;
-    private const int DesignShift = 12;
     private const int FromShift = 0;
     private const int ToShift = 6;
+    private const int DesignMask = 0b1111;
+    private const int DesignShift = 12;
+    private const int DesignTakenShift = 16;
+    private const int FlagsMask = 0b11111111;
+    private const int FlagsShift = 20;
 
+    // 0..5 : from
+    // 6..11 : to
+    // 12..15 : design
+    // 16..19 : design taken
+    // 20..27 : flags
     private readonly int value;
 
     public Move(PieceDesign design, Square from, Square to)
@@ -35,9 +57,17 @@ public readonly struct Move : IEquatable<Move>
     {
     }
 
+    public Move(Move move, PieceDesign taken, MoveFlags flags)
+    {
+        this.value = (move.value & ~((DesignMask << DesignTakenShift) | (FlagsMask << FlagsShift))) |
+            ((int)taken << DesignTakenShift) | ((int)flags << FlagsShift);
+    }
+
     public PieceDesign Design => (PieceDesign)((this.value >> DesignShift) & DesignMask);
+    public PieceDesign DesignTaken => (PieceDesign)((this.value >> DesignTakenShift) & DesignMask);
     public Square From => (Square)((this.value >> FromShift) & SquareMask);
     public Square To => (Square)((this.value >> ToShift) & SquareMask);
+    public MoveFlags Flags => (MoveFlags)((this.value >> FlagsShift) & FlagsMask);
     public bool IsValid => CanMove(this.Design, this.From, this.To);
 
     public bool IsCaptureByPawn
@@ -96,7 +126,7 @@ public readonly struct Move : IEquatable<Move>
             this.square += this.step;
             if (this.square == this.target)
                 return true;
-            
+
             while ((this.moves & (1UL << (int)this.square)) == 0UL)
             {
                 this.square += this.step;
@@ -128,10 +158,10 @@ static class Movement
         moves = new ulong[pieceDesignCount][];
         for (var design = PieceDesign.WhitePawn; design <= PieceDesign.BlackKing; ++design)
         {
-            moves[(int)design] = new ulong[squareCount];
+            moves[(int)design - 1] = new ulong[squareCount];
             for (var square = Square.First; square <= Square.Last; ++square)
             {
-                moves[(int)design][(int)square] = GetMoves(design, square);
+                moves[(int)design - 1][(int)square] = GetMoves(design, square);
             }
         }
     }
@@ -139,13 +169,13 @@ static class Movement
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong GetMap(PieceDesign design, Square square)
     {
-        return moves[(int)design][(int)square];
+        return moves[(int)design - 1][(int)square];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CanMove(PieceDesign design, Square from, Square to)
     {
-        return (moves[(int)design][(int)from] & (1UL << (int)to)) != 0UL;
+        return (moves[(int)design - 1][(int)from] & (1UL << (int)to)) != 0UL;
     }
 
     public static int GetDirectionOffset(Square from, Square to)
@@ -168,7 +198,7 @@ static class Movement
         var directionOffset = GetDirectionOffset(from, to);
         return (PieceMoveDirection)Array.IndexOf(directionOffsets, directionOffset);
     }
-    
+
     private static ulong GetMoves(PieceDesign design, Square square)
     {
         return design switch
@@ -189,6 +219,9 @@ static class Movement
 
         for (var d = PieceMoveDirection.Up; d <= PieceMoveDirection.DownRight; ++d)
         {
+            if (!CanOffset(square, d))
+                continue;
+            
             var offset = directionOffsets[(int)d];
             var to = square + offset;
             TrySetMove(ref moves, to);

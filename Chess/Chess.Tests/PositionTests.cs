@@ -1,11 +1,13 @@
 ﻿namespace Chess.Tests;
+
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public class PositionTests
 {
     [TestMethod]
-    public void GetLegalMoves_InitialPosition_Equal()
+    public void GetLegalMoves_InitialPosition_Perft1_4()
     {
         var game = new Game();
         game.Reset(Game.FenInitialPosition);
@@ -14,10 +16,6 @@ public class PositionTests
         Assert.AreEqual(400UL, CountMoves(game.Position, game.Color, 2));
         Assert.AreEqual(8902UL, CountMoves(game.Position, game.Color, 3));
         Assert.AreEqual(197281UL, CountMoves(game.Position, game.Color, 4));
-        //Assert.AreEqual(4865609UL, CountMoves(game.Position, game.Color, 5));
-        //Assert.AreEqual(119060324UL, CountMoves(game.Position, game.Color, 6));
-        //Assert.AreEqual(3195901860UL, CountMoves(game.Position, game.Color, 7));
-        //Assert.AreEqual(84998978956UL, CountMoves(game.Position, game.Color, 8));
     }
 
     [TestMethod]
@@ -27,6 +25,9 @@ public class PositionTests
         game.Reset(Game.FenInitialPosition);
 
         Assert.AreEqual(4865609UL, CountMoves(game.Position, game.Color, 5));
+        //Assert.AreEqual(119060324UL, CountMoves(game.Position, game.Color, 6));
+        //Assert.AreEqual(3195901860UL, CountMoves(game.Position, game.Color, 7));
+        //Assert.AreEqual(84998978956UL, CountMoves(game.Position, game.Color, 8));
     }
 
     private ulong CountMoves(Position position, PieceColor color, int depth)
@@ -45,9 +46,9 @@ public class PositionTests
 
             foreach (var move in position.GetLegalMoves(piece))
             {
-                var takenPiece = position.Change(move);
+                var madeMove = position.Change(move);
                 count += CountMoves(position, color == PieceColor.White ? PieceColor.Black : PieceColor.White, depth - 1);
-                position.ChangeBack(move, takenPiece);
+                position.ChangeBack(madeMove);
             }
         }
 
