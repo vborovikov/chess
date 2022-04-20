@@ -38,6 +38,12 @@ public class PositionTests
     {
         if (depth == 0)
         {
+            //if (afterMove.Flags.HasFlag(MoveFlags.Capture))
+            //{
+            //    Debug.WriteLine(position.ToString());
+            //    Debug.WriteLine(afterMove.ToString());
+            //}
+
             return (
                 moves: 1UL,
                 captures: afterMove.Flags.HasFlag(MoveFlags.Capture) ? 1UL : 0UL,

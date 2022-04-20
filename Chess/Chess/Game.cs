@@ -93,14 +93,15 @@ public class Game : IGame
             return false;
         }
 
-        if (CanMove(piece, pieceSquare, ref square))
+        var move = new Move(piece.Design, pieceSquare, square);
+        if (CanMake(move))
         {
-            var move = this.position.Change(new Move(piece.Design, pieceSquare, square));
+            var madeMove = this.position.Change(move);
 
             this.Color = this.Color == PieceColor.White ? PieceColor.Black : PieceColor.White;
-            if (move.DesignTaken != PieceDesign.None)
+            if (madeMove.DesignTaken != PieceDesign.None)
             {
-                this.PieceTaken?.Invoke(this, new GameEventArgs(FindSpare(move.DesignTaken), square));
+                this.PieceTaken?.Invoke(this, new GameEventArgs(FindSpare(madeMove.DesignTaken), square));
             }
             this.PieceMoved?.Invoke(this, new GameEventArgs(piece, pieceSquare));
 
@@ -142,19 +143,12 @@ public class Game : IGame
         //}
     }
 
-    private bool CanMove(IPiece piece, Square oldSquare, ref Square newSquare)
+    private bool CanMake(Move move)
     {
-        if (this.Color != piece.Color)
+        if (this.Color != Piece.GetColor(move.Design))
             return false;
 
-        var makeTo = this.position.CanChange(new Move(piece.Design, oldSquare, newSquare));
-        if (makeTo != Square.None)
-        {
-            newSquare = makeTo;
-            return true;
-        }
-
-        return false;
+        return this.position.CanChange(move);
     }
 
     public override string ToString()

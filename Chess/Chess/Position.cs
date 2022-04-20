@@ -92,7 +92,7 @@ public sealed class Position : IBoard, ICloneable
                 Math.Abs(Piece.GetRank(move.From) - Piece.GetRank(move.To)) == 2;
             if (twoSquareMove)
             {
-                var pawnSquare = Piece.GetSquare(Piece.GetFile(move.To), 
+                var pawnSquare = Piece.GetSquare(Piece.GetFile(move.To),
                     Piece.GetRank(move.To) + (movedPiece.Color == PieceColor.White ? -1 : +1));
                 this.enPassant = pawnSquare;
             }
@@ -140,35 +140,33 @@ public sealed class Position : IBoard, ICloneable
         this.board[(int)takenSquare] = this.game.FindSpare(move.DesignTaken);
     }
 
-    public Square CanChange(Move move)
+    public bool CanChange(Move move)
     {
         if (move.IsValid)
         {
-            var makeTo = move.To;
             foreach (var square in move.GetPath())
             {
-                if (square == makeTo)
+                if (square == move.To)
                 {
                     break;
                 }
 
                 if (this.board[(int)square] is not null)
                 {
-                    makeTo = square;
-                    break;
+                    return false;
                 }
             }
 
-            var otherPiece = this.board[(int)makeTo];
+            var otherPiece = this.board[(int)move.To];
             if (Piece.GetType(move.Design) == PieceType.Pawn)
             {
                 if (otherPiece is null)
-                    return makeTo;
+                    return true;
             }
             else
             {
                 if (otherPiece is null || otherPiece.Color != Piece.GetColor(move.Design))
-                    return makeTo;
+                    return true;
             }
         }
         else if (move.IsCaptureByPawn)
@@ -182,11 +180,11 @@ public sealed class Position : IBoard, ICloneable
             var otherPiece = this.board[(int)otherSquare];
             if (otherPiece is not null && otherPiece.Color != Piece.GetColor(move.Design))
             {
-                return move.To;
+                return true;
             }
         }
 
-        return Square.None;
+        return false;
     }
 
     public MoveEnumerator GetMoves(IPiece piece)
@@ -207,7 +205,7 @@ public sealed class Position : IBoard, ICloneable
             if (otherPiece is not null && otherPiece != piece && otherPiece.Color != piece.Color)
             {
                 var attack = new Move(otherPiece.Design, Find(otherPiece), pieceSquare);
-                if (CanChange(attack) == pieceSquare)
+                if (CanChange(attack))
                 {
                     return true;
                 }
@@ -224,7 +222,7 @@ public sealed class Position : IBoard, ICloneable
 
     public bool IsLegal(Move move, IPiece piece, bool canSelfSacrifice = true)
     {
-        if (CanChange(move) == move.To)
+        if (CanChange(move))
         {
             move = Change(move);
 
@@ -321,7 +319,7 @@ public sealed class Position : IBoard, ICloneable
             for (++this.to; this.to >= Square.First && this.to <= Square.Last; ++this.to)
             {
                 this.move = new Move(this.design, this.from, this.to);
-                if (this.position.CanChange(this.move) == this.to)
+                if (this.position.CanChange(this.move))
                 {
                     return true;
                 }
