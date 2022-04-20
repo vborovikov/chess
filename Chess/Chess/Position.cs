@@ -228,8 +228,8 @@ public sealed class Position : IBoard, ICloneable
         {
             move = Change(move);
 
-            var inCheck = (!canSelfSacrifice && IsInCheckFor(piece)) ||
-                (piece.Type != PieceType.King && IsInCheck(piece.Color));
+            var inCheck = (piece.Type != PieceType.King && IsInCheck(piece.Color)) ||
+                (!canSelfSacrifice && IsInCheckFor(piece));
 
             ChangeBack(move);
 
