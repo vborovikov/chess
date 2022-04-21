@@ -7,6 +7,8 @@ using System;
 /// </summary>
 interface IBoard
 {
+    Square EnPassant { get; set; }
+
     void Clear();
     void Place(IPiece piece, Square square);
 }
@@ -38,6 +40,8 @@ public sealed class Position : IBoard, ICloneable
     public PieceEnumerator Pieces => new(this);
 
     public Square EnPassant => this.enPassant;
+
+    Square IBoard.EnPassant { get => this.enPassant; set => this.enPassant = value; }
 
     public override string ToString()
     {

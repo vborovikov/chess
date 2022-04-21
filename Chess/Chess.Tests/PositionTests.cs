@@ -7,6 +7,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class PositionTests
 {
     [TestMethod]
+    public void Change_EnPassant_HasFlag()
+    {
+        var game = new Game("rnbqkbnr/pp2pppp/8/2ppP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1");
+        var move = new Move(PieceDesign.WhitePawn, Square.e5, Square.d6);
+        var position = game.Position;
+
+        Assert.IsTrue(position.CanChange(move));
+        var madeMove = position.Change(move);
+
+        Assert.IsTrue(madeMove.Flags.HasFlag(MoveFlags.EnPassant));
+        Assert.IsTrue(madeMove.Flags.HasFlag(MoveFlags.Capture));
+    }
+
+    [TestMethod]
     public void GetLegalMoves_InitialPosition_Perft1_4()
     {
         var game = new Game();
@@ -21,8 +35,7 @@ public class PositionTests
     [TestMethod]
     public void GetLegalMoves_InitialPosition_Perft5()
     {
-        var game = new Game();
-        game.Reset(Game.FenInitialPosition);
+        var game = new Game(Game.FenInitialPosition);
 
         Assert.AreEqual((4865609UL, 82719UL, 258UL), CountMoves(game.Position, game.Color, 5));
         //Assert.AreEqual(119060324UL, CountMoves(game.Position, game.Color, 6));

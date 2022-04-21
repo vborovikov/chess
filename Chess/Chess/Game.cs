@@ -66,6 +66,12 @@ public class Game : IGame
         this.pieces = CreatePieces(this);
     }
 
+    public Game(ReadOnlySpan<char> record, GameNotation notation = GameNotation.ForsythEdwards)
+        : this()
+    {
+        Reset(record, notation);
+    }
+
     public PieceColor Color { get; private set; }
     public Castling Castling { get; private set; }
 
@@ -282,48 +288,46 @@ public class Game : IGame
 
     private void ResetFen(IBoard board, ReadOnlySpan<char> record)
     {
-        var len = record.Length;
-        var i = 0;
+        var fen = record.Split();
 
         // position
-        var file = SquareFile.A;
-        var rank = SquareRank.Eight;
-        for (; i < len; ++i)
+        if (fen.MoveNext())
         {
-            var c = record[i];
-            if (c == ' ')
+            var pos = fen.Current;
+            var file = SquareFile.A;
+            var rank = SquareRank.Eight;
+            for (var i = 0; i < pos.Length; ++i)
             {
-                break;
-            }
+                var c = pos[i];
 
-            if (c == '/')
-            {
-                file = SquareFile.A;
-                rank--;
-            }
-            else if (c >= '1' && c <= '8')
-            {
-                file += (c - '0');
-            }
-            else
-            {
-                var piece = FindSparePieceFen(c);
-                if (piece is null)
+                if (c == '/')
                 {
-                    //todo: invalid character
-                    break;
+                    file = SquareFile.A;
+                    rank--;
                 }
+                else if (c >= '1' && c <= '8')
+                {
+                    file += (c - '0');
+                }
+                else
+                {
+                    var piece = FindSparePieceFen(c);
+                    if (piece is null)
+                    {
+                        //todo: invalid character
+                        break;
+                    }
 
-                board.Place(piece, Piece.GetSquare(file, rank));
-                file++;
+                    board.Place(piece, Piece.GetSquare(file, rank));
+                    file++;
+                }
             }
         }
 
         // active color
-        if (i < len)
+        if (fen.MoveNext())
         {
-            var c = record[++i];
-            if (c == 'b')
+            if (fen.Current[0] == 'b')
             {
                 this.Color = PieceColor.Black;
             }
@@ -331,23 +335,18 @@ public class Game : IGame
             {
                 this.Color = PieceColor.White;
             }
-            ++i;
         }
 
         // castling rights
-        if (i < len)
+        if (fen.MoveNext())
         {
-            var c = record[++i];
-            if (c == '-')
+            var cast = fen.Current;
+            this.Castling = Castling.None;
+            if (cast[0] != '-')
             {
-                this.Castling = Castling.None;
-            }
-            else
-            {
-                this.Castling = Castling.None;
-                while (c != ' ')
+                for (var i = 0; i < cast.Length; ++i)
                 {
-                    this.Castling |= c switch
+                    this.Castling |= cast[i] switch
                     {
                         'K' => Castling.WhiteKingSide,
                         'Q' => Castling.WhiteQueenSide,
@@ -355,21 +354,15 @@ public class Game : IGame
                         'q' => Castling.BlackQueenSide,
                         _ => Castling.None,
                     };
-
-                    if (i < len)
-                    {
-                        c = record[i++];
-                    }
-                    else
-                    {
-                        break;
-                    }
                 }
             }
-            ++i;
         }
 
-        //todo: en passant
+        // en passant
+        if (fen.MoveNext())
+        {
+            board.EnPassant = Enum.TryParse<Square>(fen.Current, out var enPassant) ? enPassant : Square.None;
+        }
     }
 
     private IPiece FindSparePieceFen(char ch)
