@@ -10,6 +10,6 @@ public class FenTests
     {
         var game = Game.FromFen(Game.FenInitialPosition);
 
-        Assert.AreEqual(Game.FenInitialPosition[..^4], game.ToString());
+        Assert.AreEqual(Game.FenInitialPosition, game.ToString());
     }
 }

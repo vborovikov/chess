@@ -25,8 +25,8 @@ public enum MoveFlags : byte
     Promotion = 1 << 3,
     Check = 1 << 4,
     Checkmate = 1 << 5,
-    Stalemate = 1 << 6,
-    Draw = 1 << 7
+    //Stalemate = 1 << 6,
+    //Draw = 1 << 7
 }
 
 public readonly struct Move : IEquatable<Move>
@@ -37,14 +37,16 @@ public readonly struct Move : IEquatable<Move>
     private const int DesignMask = 0b1111;
     private const int DesignShift = 12;
     private const int DesignTakenShift = 16;
-    private const int FlagsMask = 0b11111111;
+    private const int FlagsMask = 0b111111;
     private const int FlagsShift = 20;
+    private const int EnPassantShift = 26;
 
     // 0..5 : from
     // 6..11 : to
     // 12..15 : design
     // 16..19 : design taken
-    // 20..27 : flags
+    // 20..25 : flags
+    // 26..31 : en passant
     private readonly int value;
 
     public Move(PieceDesign design, Square from, Square to)
@@ -57,10 +59,10 @@ public readonly struct Move : IEquatable<Move>
     {
     }
 
-    public Move(Move move, PieceDesign taken, MoveFlags flags)
+    public Move(Move move, PieceDesign taken, MoveFlags flags = MoveFlags.None, Square enPassant = Square.None)
+        : this(move.Design, move.From, move.To)
     {
-        this.value = (move.value & ~((DesignMask << DesignTakenShift) | (FlagsMask << FlagsShift))) |
-            ((int)taken << DesignTakenShift) | ((int)flags << FlagsShift);
+        this.value |= ((int)taken << DesignTakenShift) | ((int)flags << FlagsShift) | ((int)enPassant << EnPassantShift);
     }
 
     public PieceDesign Design => (PieceDesign)((this.value >> DesignShift) & DesignMask);
@@ -68,6 +70,7 @@ public readonly struct Move : IEquatable<Move>
     public Square From => (Square)((this.value >> FromShift) & SquareMask);
     public Square To => (Square)((this.value >> ToShift) & SquareMask);
     public MoveFlags Flags => (MoveFlags)((this.value >> FlagsShift) & FlagsMask);
+    public Square EnPassant => (Square)((this.value >> EnPassantShift) & SquareMask);
     public bool IsValid => CanMove(this.Design, this.From, this.To);
 
     public bool IsCaptureByPawn
@@ -88,6 +91,8 @@ public readonly struct Move : IEquatable<Move>
             return false;
         }
     }
+
+    public bool IsEnPassantCapture => this.IsCaptureByPawn && this.Flags.HasFlag(MoveFlags.EnPassant) && this.To == this.EnPassant;
 
     public SquareEnumerator GetPath() => new(this);
 

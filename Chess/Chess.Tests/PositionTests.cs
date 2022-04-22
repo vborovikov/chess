@@ -9,15 +9,22 @@ public class PositionTests
     [TestMethod]
     public void Change_EnPassant_HasFlag()
     {
-        var game = new Game("rnbqkbnr/pp2pppp/8/2ppP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1");
+        const string fen = "rnbqkbnr/pp2pppp/8/2ppP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1";
+
+        var game = new Game(fen);
         var move = new Move(PieceDesign.WhitePawn, Square.e5, Square.d6);
         var position = game.Position;
 
         Assert.IsTrue(position.CanChange(move));
         var madeMove = position.Change(move);
 
-        Assert.IsTrue(madeMove.Flags.HasFlag(MoveFlags.EnPassant));
-        Assert.IsTrue(madeMove.Flags.HasFlag(MoveFlags.Capture));
+        Assert.IsTrue(madeMove.IsEnPassantCapture);
+        Assert.AreEqual(Square.d6, madeMove.EnPassant);
+
+        position.ChangeBack(madeMove);
+
+        Assert.AreEqual(Square.d6, position.EnPassant);
+        Assert.AreEqual(fen, game.ToString());
     }
 
     [TestMethod]
@@ -60,7 +67,7 @@ public class PositionTests
             return (
                 moves: 1UL,
                 captures: afterMove.Flags.HasFlag(MoveFlags.Capture) ? 1UL : 0UL,
-                enPassants: afterMove.Flags.HasFlag(MoveFlags.EnPassant) ? 1UL : 0UL);
+                enPassants: afterMove.IsEnPassantCapture ? 1UL : 0UL);
         }
 
         var totalCounts = (moves: 0UL, captures: 0UL, enPassants: 0UL);

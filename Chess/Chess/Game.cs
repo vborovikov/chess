@@ -237,6 +237,12 @@ public class Game : IGame
             fen.Append(this.position.EnPassant.ToString());
         }
 
+        // halfmove clock
+        fen.Append(" 0");
+
+        // fullmove counter
+        fen.Append(" 1");
+
         return fen.ToString();
     }
 
@@ -363,6 +369,9 @@ public class Game : IGame
         {
             board.EnPassant = Enum.TryParse<Square>(fen.Current, out var enPassant) ? enPassant : Square.None;
         }
+
+        // halfmove clock
+
     }
 
     private IPiece FindSparePieceFen(char ch)

@@ -87,6 +87,7 @@ public sealed class Position : IBoard, ICloneable
         this.board[(int)move.To] = movedPiece;
 
         var moveFlags = MoveFlags.None;
+        var ep = this.enPassant;
 
         // update en passant
         if (movedPiece.Type == PieceType.Pawn)
@@ -96,9 +97,8 @@ public sealed class Position : IBoard, ICloneable
                 Math.Abs(Piece.GetRank(move.From) - Piece.GetRank(move.To)) == 2;
             if (twoSquareMove)
             {
-                var pawnSquare = Piece.GetSquare(Piece.GetFile(move.To),
+                this.enPassant = Piece.GetSquare(Piece.GetFile(move.To),
                     Piece.GetRank(move.To) + (movedPiece.Color == PieceColor.White ? -1 : +1));
-                this.enPassant = pawnSquare;
             }
             else if (move.IsCaptureByPawn)
             {
@@ -109,9 +109,8 @@ public sealed class Position : IBoard, ICloneable
                     var pawnSquare = Piece.GetSquare(Piece.GetFile(this.enPassant),
                         Piece.GetRank(this.enPassant) + (movedPiece.Color == PieceColor.White ? -1 : +1));
                     takenPiece = this.board[(int)pawnSquare];
+                    this.board[(int)pawnSquare] = null!;
                     this.enPassant = Square.None;
-
-                    moveFlags |= MoveFlags.EnPassant;
                 }
             }
             else
@@ -124,24 +123,33 @@ public sealed class Position : IBoard, ICloneable
             this.enPassant = Square.None;
         }
 
+        if (ep != Square.None)
+            moveFlags |= MoveFlags.EnPassant;
         if (takenPiece is not null)
             moveFlags |= MoveFlags.Capture;
 
-        return new Move(move, takenPiece?.Design ?? PieceDesign.None, moveFlags);
+        return new Move(move, takenPiece?.Design ?? PieceDesign.None, moveFlags, ep);
     }
 
     internal void ChangeBack(Move move)
     {
         this.board[(int)move.From] = this.board[(int)move.To];
+        this.board[(int)move.To] = null!;
 
         var takenSquare = move.To;
         if (move.Flags.HasFlag(MoveFlags.EnPassant))
         {
-            takenSquare = Piece.GetSquare(Piece.GetFile(move.To),
-                Piece.GetRank(move.To) + (Piece.GetColor(move.Design) == PieceColor.White ? -1 : +1));
-            this.enPassant = move.To;
+            if (move.Flags.HasFlag(MoveFlags.Capture) && move.To == move.EnPassant)
+            {
+                takenSquare = Piece.GetSquare(Piece.GetFile(move.To),
+                   Piece.GetRank(move.To) + (Piece.GetColor(move.Design) == PieceColor.White ? -1 : +1));
+            }
+            this.enPassant = move.EnPassant;
         }
-        this.board[(int)takenSquare] = this.game.FindSpare(move.DesignTaken);
+        if (move.Flags.HasFlag(MoveFlags.Capture))
+        {
+            this.board[(int)takenSquare] = this.game.FindSpare(move.DesignTaken);
+        }
     }
 
     public bool CanChange(Move move)
