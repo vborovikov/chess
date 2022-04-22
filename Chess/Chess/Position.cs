@@ -139,7 +139,7 @@ public sealed class Position : IBoard, ICloneable
         var takenSquare = move.To;
         if (move.Flags.HasFlag(MoveFlags.EnPassant))
         {
-            if (move.Flags.HasFlag(MoveFlags.Capture) && move.To == move.EnPassant)
+            if (move.IsEnPassantCapture)
             {
                 takenSquare = Piece.GetSquare(Piece.GetFile(move.To),
                    Piece.GetRank(move.To) + (Piece.GetColor(move.Design) == PieceColor.White ? -1 : +1));

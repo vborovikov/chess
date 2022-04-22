@@ -92,7 +92,8 @@ public readonly struct Move : IEquatable<Move>
         }
     }
 
-    public bool IsEnPassantCapture => this.IsCaptureByPawn && this.Flags.HasFlag(MoveFlags.EnPassant) && this.To == this.EnPassant;
+    public bool IsEnPassantCapture => this.IsCaptureByPawn &&
+        this.Flags.HasFlag(MoveFlags.Capture | MoveFlags.EnPassant) && this.To == this.EnPassant;
 
     public SquareEnumerator GetPath() => new(this);
 
