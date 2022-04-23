@@ -8,6 +8,7 @@ using System;
 interface IBoard
 {
     Square EnPassant { get; set; }
+    Castling Castling { get; set; }
 
     void Clear();
     void Place(IPiece piece, Square square);
@@ -19,6 +20,7 @@ public sealed class Position : IBoard, ICloneable
     private readonly IPiece[] board;
 
     private Square enPassant;
+    private Castling castling;
 
     public Position(Game game)
         : this(game, new IPiece[Square.Last - Square.First + 1])
@@ -41,7 +43,11 @@ public sealed class Position : IBoard, ICloneable
 
     public Square EnPassant => this.enPassant;
 
+    public Castling Castling => this.castling;
+
     Square IBoard.EnPassant { get => this.enPassant; set => this.enPassant = value; }
+
+    Castling IBoard.Castling { get => this.castling; set => this.castling = value; }
 
     public override string ToString()
     {
@@ -88,6 +94,7 @@ public sealed class Position : IBoard, ICloneable
 
         var moveFlags = MoveFlags.None;
         var ep = this.enPassant;
+        var cast = this.castling;
 
         // update en passant
         if (movedPiece.Type == PieceType.Pawn)
@@ -123,12 +130,14 @@ public sealed class Position : IBoard, ICloneable
             this.enPassant = Square.None;
         }
 
+        if (cast != Castling.None)
+            moveFlags |= MoveFlags.Castling;
         if (ep != Square.None)
             moveFlags |= MoveFlags.EnPassant;
         if (takenPiece is not null)
             moveFlags |= MoveFlags.Capture;
 
-        return new Move(move, takenPiece?.Design ?? PieceDesign.None, moveFlags, ep);
+        return new Move(move, takenPiece?.Design ?? PieceDesign.None, moveFlags, ep, cast);
     }
 
     internal void ChangeBack(Move move)
@@ -194,6 +203,10 @@ public sealed class Position : IBoard, ICloneable
             {
                 return true;
             }
+        }
+        else
+        {
+            return this.Castling.HasFlag(move.AsCastling);
         }
 
         return false;

@@ -59,7 +59,8 @@ public readonly struct Move : IEquatable<Move>
     {
     }
 
-    public Move(Move move, PieceDesign taken, MoveFlags flags = MoveFlags.None, Square enPassant = Square.None)
+    public Move(Move move, PieceDesign taken, 
+        MoveFlags flags = MoveFlags.None, Square enPassant = Square.None, Castling castling = Castling.None)
         : this(move.Design, move.From, move.To)
     {
         this.value |= ((int)taken << DesignTakenShift) | ((int)flags << FlagsShift) | ((int)enPassant << EnPassantShift);
@@ -94,6 +95,35 @@ public readonly struct Move : IEquatable<Move>
 
     public bool IsEnPassantCapture => this.IsCaptureByPawn &&
         this.Flags.HasFlag(MoveFlags.Capture | MoveFlags.EnPassant) && this.To == this.EnPassant;
+
+    public Castling AsCastling
+    {
+        get
+        {
+            if (Piece.GetType(this.Design) != PieceType.King)
+            {
+                return Castling.None;
+            }
+
+            var direction = GetDirection(this.From, this.To);
+            if (direction != PieceMoveDirection.Left && direction != PieceMoveDirection.Right)
+            {
+                return Castling.None;
+            }
+
+            if (!CanOffset(this.From, direction, 2) || Offset(this.From, direction, 2) != this.To)
+            {
+                return Castling.None;
+            }
+
+            if (direction == PieceMoveDirection.Right)
+            {
+                return this.Design == PieceDesign.WhiteKing ? Castling.WhiteKingSide : Castling.BlackKingSide;
+            }
+
+            return this.Design == PieceDesign.WhiteKing ? Castling.WhiteQueenSide : Castling.BlackQueenSide;
+        }
+    }
 
     public SquareEnumerator GetPath() => new(this);
 
@@ -227,7 +257,7 @@ static class Movement
         {
             if (!CanOffset(square, d))
                 continue;
-            
+
             var offset = directionOffsets[(int)d];
             var to = square + offset;
             TrySetMove(ref moves, to);
@@ -351,25 +381,33 @@ static class Movement
         return moves;
     }
 
-    internal static bool CanOffset(Square from, PieceMoveDirection direction)
+    internal static bool CanOffset(Square from, PieceMoveDirection direction, int times = 1)
     {
+        if (times <= 0 || times > 7)
+            return false;
+
+        var firstRank = SquareRank.One + times - 1;
+        var lastRank = SquareRank.Eight - times + 1;
+        var firstFile = SquareFile.A + times - 1;
+        var lastFile = SquareFile.H - times + 1;
+
         return direction switch
         {
-            PieceMoveDirection.Up when Piece.GetRank(from) == SquareRank.Eight => false,
-            PieceMoveDirection.Down when Piece.GetRank(from) == SquareRank.One => false,
-            PieceMoveDirection.Left when Piece.GetFile(from) == SquareFile.A => false,
-            PieceMoveDirection.Right when Piece.GetFile(from) == SquareFile.H => false,
-            PieceMoveDirection.UpLeft when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.A => false,
-            PieceMoveDirection.UpRight when Piece.GetRank(from) == SquareRank.Eight || Piece.GetFile(from) == SquareFile.H => false,
-            PieceMoveDirection.DownLeft when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.A => false,
-            PieceMoveDirection.DownRight when Piece.GetRank(from) == SquareRank.One || Piece.GetFile(from) == SquareFile.H => false,
+            PieceMoveDirection.Up when Piece.GetRank(from) == lastRank => false,
+            PieceMoveDirection.Down when Piece.GetRank(from) == firstRank => false,
+            PieceMoveDirection.Left when Piece.GetFile(from) == firstFile => false,
+            PieceMoveDirection.Right when Piece.GetFile(from) == lastFile => false,
+            PieceMoveDirection.UpLeft when Piece.GetRank(from) == lastRank || Piece.GetFile(from) == firstFile => false,
+            PieceMoveDirection.UpRight when Piece.GetRank(from) == lastRank || Piece.GetFile(from) == lastFile => false,
+            PieceMoveDirection.DownLeft when Piece.GetRank(from) == firstRank || Piece.GetFile(from) == firstFile => false,
+            PieceMoveDirection.DownRight when Piece.GetRank(from) == firstRank || Piece.GetFile(from) == lastFile => false,
             _ => true
         };
     }
 
-    internal static Square Offset(Square from, PieceMoveDirection direction)
+    internal static Square Offset(Square from, PieceMoveDirection direction, int times = 1)
     {
-        return from + directionOffsets[(int)direction];
+        return from + directionOffsets[(int)direction] * times;
     }
 
     private static bool CanOffset(Square from, params PieceMoveDirection[] directions)

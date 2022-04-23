@@ -73,7 +73,6 @@ public class Game : IGame
     }
 
     public PieceColor Color { get; private set; }
-    public Castling Castling { get; private set; }
 
     internal IPiece WhiteKing => this.pieces[0];
     internal IPiece BlackKing => this.pieces[1];
@@ -202,25 +201,25 @@ public class Game : IGame
 
         // castling
         fen.Append(' ');
-        if (this.Castling == Castling.None)
+        if (this.position.Castling == Castling.None)
         {
             fen.Append('-');
         }
         else
         {
-            if (this.Castling.HasFlag(Castling.WhiteKingSide))
+            if (this.position.Castling.HasFlag(Castling.WhiteKingSide))
             {
                 fen.Append('K');
             }
-            if (this.Castling.HasFlag(Castling.WhiteQueenSide))
+            if (this.position.Castling.HasFlag(Castling.WhiteQueenSide))
             {
                 fen.Append('Q');
             }
-            if (this.Castling.HasFlag(Castling.BlackKingSide))
+            if (this.position.Castling.HasFlag(Castling.BlackKingSide))
             {
                 fen.Append('k');
             }
-            if (this.Castling.HasFlag(Castling.BlackQueenSide))
+            if (this.position.Castling.HasFlag(Castling.BlackQueenSide))
             {
                 fen.Append('q');
             }
@@ -347,12 +346,12 @@ public class Game : IGame
         if (fen.MoveNext())
         {
             var cast = fen.Current;
-            this.Castling = Castling.None;
+            board.Castling = Castling.None;
             if (cast[0] != '-')
             {
                 for (var i = 0; i < cast.Length; ++i)
                 {
-                    this.Castling |= cast[i] switch
+                    board.Castling |= cast[i] switch
                     {
                         'K' => Castling.WhiteKingSide,
                         'Q' => Castling.WhiteQueenSide,
