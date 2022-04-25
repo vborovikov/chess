@@ -3,7 +3,7 @@
 using System.Runtime.CompilerServices;
 using static Movement;
 
-enum PieceMoveDirection
+public enum PieceMoveDirection
 {
     Up,         //  8
     Down,       // -8
@@ -63,6 +63,7 @@ public readonly struct Move : IEquatable<Move>
         MoveFlags flags = MoveFlags.None, Square enPassant = Square.None, Castling castling = Castling.None)
         : this(move.Design, move.From, move.To)
     {
+        //todo: store castling
         this.value |= ((int)taken << DesignTakenShift) | ((int)flags << FlagsShift) | ((int)enPassant << EnPassantShift);
     }
 
@@ -124,6 +125,8 @@ public readonly struct Move : IEquatable<Move>
             return this.Design == PieceDesign.WhiteKing ? Castling.WhiteQueenSide : Castling.BlackQueenSide;
         }
     }
+
+    public PieceMoveDirection Direction => GetDirection(this.From, this.To);
 
     public SquareEnumerator GetPath() => new(this);
 

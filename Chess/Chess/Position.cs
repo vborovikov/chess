@@ -129,6 +129,45 @@ public sealed class Position : IBoard, ICloneable
         {
             this.enPassant = Square.None;
         }
+        
+        // update castling
+        if (movedPiece.Type == PieceType.Rook)
+        {
+            if (move.From == Square.a1)
+                this.castling &= ~Castling.WhiteQueenSide;
+            else if (move.From == Square.h1)
+                this.castling &= ~Castling.WhiteKingSide;
+            else if (move.From == Square.a8)
+                this.castling &= ~Castling.BlackQueenSide;
+            else if (move.From == Square.h8)
+                this.castling &= ~Castling.BlackKingSide;
+        }
+        else if (movedPiece.Type == PieceType.King)
+        {
+            if (this.castling.HasFlag(move.AsCastling))
+            {
+                // move rook too
+                (Square From, Square To) rookMove = move.Direction switch
+                {
+                    PieceMoveDirection.Left when movedPiece.Color == PieceColor.White => (Square.a1, Square.c1),
+                    PieceMoveDirection.Left when movedPiece.Color == PieceColor.Black => (Square.a8, Square.c8),
+                    PieceMoveDirection.Right when movedPiece.Color == PieceColor.White => (Square.h1, Square.f1),
+                    PieceMoveDirection.Right when movedPiece.Color == PieceColor.Black => (Square.h8, Square.f8),
+                    _ => (Square.None, Square.None),
+                };
+                if (rookMove.From != Square.None && rookMove.To != Square.None)
+                {
+                    var rook = this.board[(int)rookMove.From];
+                    this.board[(int)rookMove.From] = null!;
+                    this.board[(int)rookMove.To] = rook;
+                }
+            }
+
+            if (move.From == Square.e1)
+                this.castling &= ~(Castling.WhiteKingSide | Castling.WhiteQueenSide);
+            else if (move.From == Square.e8)
+                this.castling &= ~(Castling.BlackKingSide | Castling.BlackQueenSide);
+        }
 
         if (cast != Castling.None)
             moveFlags |= MoveFlags.Castling;
@@ -204,9 +243,23 @@ public sealed class Position : IBoard, ICloneable
                 return true;
             }
         }
-        else
+        else if (this.Castling.HasFlag(move.AsCastling))
         {
-            return this.Castling.HasFlag(move.AsCastling);
+            foreach (var square in move.GetPath())
+            {
+                if (square == move.To)
+                {
+                    break;
+                }
+
+                //todo: also check if the square is under attack
+                if (this.board[(int)square] is not null)
+                {
+                    return false;
+                }
+            }
+            //todo: stack overflow here
+            return /*!IsInCheck(Piece.GetColor(move.Design))*/ true;
         }
 
         return false;
