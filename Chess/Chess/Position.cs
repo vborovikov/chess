@@ -14,6 +14,8 @@ interface IBoard
     void Place(IPiece piece, Square square);
 }
 
+//todo: eliminate arrays, use bitboards
+// https://www.chessprogramming.org/General_Setwise_Operations
 public sealed class Position : IBoard, ICloneable
 {
     private readonly Game game;
