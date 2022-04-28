@@ -188,6 +188,7 @@ static class Movement
 
     private static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, 9, -9, -7 };
     private static readonly ulong[][] moves;
+    private static readonly ulong[][] attacks;
 
     static Movement()
     {
@@ -195,14 +196,30 @@ static class Movement
         var squareCount = Square.Last - Square.First + 1;
 
         moves = new ulong[pieceDesignCount][];
+        attacks = new ulong[pieceDesignCount][];
         for (var design = PieceDesign.WhitePawn; design <= PieceDesign.BlackKing; ++design)
         {
             moves[(int)design - 1] = new ulong[squareCount];
+            attacks[(int)design - 1] = new ulong[squareCount];
             for (var square = Square.First; square <= Square.Last; ++square)
             {
                 moves[(int)design - 1][(int)square] = GetMoves(design, square);
+                if (design == PieceDesign.WhitePawn || design == PieceDesign.BlackPawn)
+                {
+                    attacks[(int)design - 1][(int)square] = GetPawnAttacks(Piece.GetColor(design), square);
+                }
+                else
+                {
+                    attacks[(int)design - 1][(int)square] = moves[(int)design - 1][(int)square];
+                }
             }
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong GetAttackMap(PieceDesign design, Square square)
+    {
+        return attacks[(int)design - 1][(int)square];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -354,6 +371,32 @@ static class Movement
         }
 
         return moves;
+    }
+
+    private static ulong GetPawnAttacks(PieceColor color, Square square)
+    {
+        if (color == PieceColor.White)
+        {
+            if (Piece.GetRank(square) == SquareRank.One)
+                return EmptyMap;
+        }
+        else
+        {
+            if (Piece.GetRank(square) == SquareRank.Eight)
+                return EmptyMap;
+        }
+
+        var attacks = EmptyMap;
+
+        var leftCaptureOffset = color == PieceColor.White ?
+            directionOffsets[(int)PieceMoveDirection.UpLeft] : directionOffsets[(int)PieceMoveDirection.DownLeft];
+        TrySetMove(ref attacks, square + leftCaptureOffset);
+
+        var rightCaptureOffset = color == PieceColor.White ?
+            directionOffsets[(int)PieceMoveDirection.UpRight] : directionOffsets[(int)PieceMoveDirection.DownRight];
+        TrySetMove(ref attacks, square + rightCaptureOffset);
+
+        return attacks;
     }
 
     private static ulong GetSlidingMoves(Square square,
