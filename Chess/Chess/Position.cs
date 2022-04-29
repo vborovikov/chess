@@ -146,7 +146,7 @@ public sealed class Position : IBoard, ICloneable
         }
         else if (movedPiece.Type == PieceType.King)
         {
-            if (this.castling.HasFlag(move.AsCastling))
+            if (CanCastleWith(move))
             {
                 // move rook too
                 (Square From, Square To) rookMove = move.Direction switch
@@ -245,7 +245,7 @@ public sealed class Position : IBoard, ICloneable
                 return true;
             }
         }
-        else if (this.Castling.HasFlag(move.AsCastling))
+        else if (CanCastleWith(move))
         {
             foreach (var square in move.GetPath())
             {
@@ -260,8 +260,8 @@ public sealed class Position : IBoard, ICloneable
                     return false;
                 }
             }
-            //todo: stack overflow here
-            return /*!IsInCheck(Piece.GetColor(move.Design))*/ true;
+            
+            return !IsInCheck(Piece.GetColor(move.Design));
         }
 
         return false;
@@ -285,7 +285,7 @@ public sealed class Position : IBoard, ICloneable
             if (otherPiece is not null && otherPiece != piece && otherPiece.Color != piece.Color)
             {
                 var attack = new Move(otherPiece.Design, Find(otherPiece), pieceSquare);
-                if (CanChange(attack))
+                if (attack.AsCastling == Castling.None && CanChange(attack))
                 {
                     return true;
                 }
@@ -300,7 +300,7 @@ public sealed class Position : IBoard, ICloneable
         return IsInCheckFor(color == PieceColor.White ? this.game.WhiteKing : this.game.BlackKing);
     }
 
-    public bool IsLegal(Move move, IPiece piece, bool canSelfSacrifice = true)
+    private bool IsLegal(Move move, IPiece piece, bool canSelfSacrifice = true)
     {
         if (CanChange(move))
         {
@@ -316,6 +316,13 @@ public sealed class Position : IBoard, ICloneable
         }
 
         return false;
+    }
+
+    private bool CanCastleWith(Move move)
+    {
+        var asCastling = move.AsCastling;
+
+        return asCastling != Castling.None && this.Castling.HasFlag(asCastling);
     }
 
     void IBoard.Clear()
